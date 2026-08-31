@@ -231,13 +231,59 @@ export function ProductsManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>رابط الصورة</Label>
-              <Input
-                dir="ltr"
-                value={editing?.image_url ?? ""}
-                onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+              <Label>صورة المنتج</Label>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void handleFile(file);
+                }}
               />
+              {editing?.image_url ? (
+                <div className="relative overflow-hidden rounded-2xl bg-muted">
+                  <img
+                    src={editing.image_url}
+                    alt="صورة المنتج"
+                    className="h-40 w-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-2 top-2 rounded-full"
+                    onClick={removeImage}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-border bg-surface text-sm text-muted-foreground">
+                  لا توجد صورة
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-full"
+                disabled={uploading}
+                onClick={() => fileInput.current?.click()}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> جاري الرفع…
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="size-4" /> {editing?.image_url ? "تغيير الصورة" : "رفع صورة"}
+                  </>
+                )}
+              </Button>
             </div>
+
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
