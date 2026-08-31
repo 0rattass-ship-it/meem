@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,58 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import { useCategories, useProducts, type Product } from "@/lib/store-data";
 
+const BUCKET = "product-images";
+const IMAGE_PREFIX = "/api/public/product-image/";
+
+function storagePathFromUrl(url: string | null | undefined) {
+  if (!url) return null;
+  const idx = url.indexOf(IMAGE_PREFIX);
+  if (idx === -1) return null;
+  return decodeURIComponent(url.slice(idx + IMAGE_PREFIX.length));
+}
+
 export function ProductsManager() {
   const products = useProducts();
   const categories = useCategories(true);
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["products"] });
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("الملف المختار ليس صورة");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 10 ميجابايت");
+      return;
+    }
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: false });
+    setUploading(false);
+    if (error) {
+      toast.error("تعذّر رفع الصورة");
+      return;
+    }
+    const oldPath = storagePathFromUrl(editing?.image_url);
+    if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath]);
+    setEditing((prev) => ({ ...prev, image_url: `${IMAGE_PREFIX}${path}` }));
+    toast.success("تم رفع الصورة");
+  }
+
+  async function removeImage() {
+    const oldPath = storagePathFromUrl(editing?.image_url);
+    if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath]);
+    setEditing((prev) => ({ ...prev, image_url: null }));
+  }
+
 
   async function save() {
     if (!editing?.name?.trim()) {
@@ -67,15 +112,18 @@ export function ProductsManager() {
     refresh();
   }
 
-  async function remove(id: string) {
+  async function remove(product: Product) {
     if (!confirm("حذف هذا المنتج؟")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
     if (error) {
       toast.error("تعذّر الحذف");
       return;
     }
+    const path = storagePathFromUrl(product.image_url);
+    if (path) await supabase.storage.from(BUCKET).remove([path]);
     refresh();
   }
+
 
   const categoryName = (id: string | null) =>
     categories.data?.find((c) => c.id === id)?.name ?? "بدون قسم";
@@ -130,7 +178,7 @@ export function ProductsManager() {
                 variant="ghost"
                 size="icon"
                 className="text-destructive"
-                onClick={() => remove(product.id)}
+                onClick={() => remove(product)}
               >
                 <Trash2 className="size-4" />
               </Button>
@@ -186,13 +234,59 @@ export function ProductsManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>رابط الصورة</Label>
-              <Input
-                dir="ltr"
-                value={editing?.image_url ?? ""}
-                onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+              <Label>صورة المنتج</Label>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void handleFile(file);
+                }}
               />
+              {editing?.image_url ? (
+                <div className="relative overflow-hidden rounded-2xl bg-muted">
+                  <img
+                    src={editing.image_url}
+                    alt="صورة المنتج"
+                    className="h-40 w-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-2 top-2 rounded-full"
+                    onClick={removeImage}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-border bg-surface text-sm text-muted-foreground">
+                  لا توجد صورة
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-full"
+                disabled={uploading}
+                onClick={() => fileInput.current?.click()}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> جاري الرفع…
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="size-4" /> {editing?.image_url ? "تغيير الصورة" : "رفع صورة"}
+                  </>
+                )}
+              </Button>
             </div>
+
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
@@ -208,7 +302,7 @@ export function ProductsManager() {
                 onCheckedChange={(v) => setEditing({ ...editing, is_available: v })}
               />
             </div>
-            <Button className="w-full rounded-full" onClick={save}>
+            <Button className="w-full rounded-full" disabled={uploading} onClick={save}>
               حفظ
             </Button>
           </div>
