@@ -51,8 +51,9 @@ function CheckoutPage() {
     const { data, error } = await supabase.rpc("place_order", {
       _customer_name: parsed.data.customer_name,
       _customer_phone: parsed.data.customer_phone,
-      _address: parsed.data.address ?? null,
-      _notes: parsed.data.notes ?? null,
+      _address: parsed.data.address ?? "",
+      _notes: parsed.data.notes ?? "",
+
       _items: cart.items.map((item) => ({
         product_id: item.productId,
         quantity: item.quantity,
