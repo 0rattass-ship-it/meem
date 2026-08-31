@@ -178,7 +178,7 @@ export function ProductsManager() {
                 variant="ghost"
                 size="icon"
                 className="text-destructive"
-                onClick={() => remove(product.id)}
+                onClick={() => remove(product)}
               >
                 <Trash2 className="size-4" />
               </Button>
