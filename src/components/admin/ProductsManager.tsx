@@ -302,7 +302,7 @@ export function ProductsManager() {
                 onCheckedChange={(v) => setEditing({ ...editing, is_available: v })}
               />
             </div>
-            <Button className="w-full rounded-full" onClick={save}>
+            <Button className="w-full rounded-full" disabled={uploading} onClick={save}>
               حفظ
             </Button>
           </div>
