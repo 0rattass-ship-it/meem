@@ -170,7 +170,7 @@ export function ProductsManager() {
             <div className="space-y-2">
               <Label>القسم</Label>
               <Select
-                value={editing?.category_id ?? undefined}
+                value={editing?.category_id ?? ""}
                 onValueChange={(v) => setEditing({ ...editing, category_id: v })}
               >
                 <SelectTrigger>
