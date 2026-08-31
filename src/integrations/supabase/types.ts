@@ -274,6 +274,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      place_order: {
+        Args: {
+          _address: string
+          _customer_name: string
+          _customer_phone: string
+          _items: Json
+          _notes: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin"
