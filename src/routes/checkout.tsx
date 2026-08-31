@@ -48,43 +48,27 @@ function CheckoutPage() {
       return;
     }
     setSending(true);
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        customer_name: parsed.data.customer_name,
-        customer_phone: parsed.data.customer_phone,
-        address: parsed.data.address || null,
-        notes: parsed.data.notes || null,
-        total: cart.total,
-      })
-      .select("id, order_number")
-      .single();
+    const { data, error } = await supabase.rpc("place_order", {
+      _customer_name: parsed.data.customer_name,
+      _customer_phone: parsed.data.customer_phone,
+      _address: parsed.data.address ?? null,
+      _notes: parsed.data.notes ?? null,
+      _items: cart.items.map((item) => ({
+        product_id: item.productId,
+        quantity: item.quantity,
+        addon_ids: item.addons.map((a) => a.id),
+      })),
+    });
+    setSending(false);
 
-    if (error || !order) {
-      setSending(false);
+    if (error || typeof data !== "number") {
       toast.error("تعذّر إرسال الطلب، حاول مرة أخرى");
       return;
     }
-
-    const { error: itemsError } = await supabase.from("order_items").insert(
-      cart.items.map((item) => ({
-        order_id: order.id,
-        product_id: item.productId,
-        product_name: item.name,
-        unit_price: item.unitPrice,
-        quantity: item.quantity,
-        addons: item.addons,
-        line_total: itemUnitTotal(item) * item.quantity,
-      })),
-    );
-    setSending(false);
-    if (itemsError) {
-      toast.error("تعذّر إرسال تفاصيل الطلب");
-      return;
-    }
     cart.clear();
-    setDone(order.order_number);
+    setDone(data);
   }
+
 
   if (done !== null) {
     return (
