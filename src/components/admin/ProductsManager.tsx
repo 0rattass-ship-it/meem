@@ -112,15 +112,18 @@ export function ProductsManager() {
     refresh();
   }
 
-  async function remove(id: string) {
+  async function remove(product: Product) {
     if (!confirm("حذف هذا المنتج؟")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
     if (error) {
       toast.error("تعذّر الحذف");
       return;
     }
+    const path = storagePathFromUrl(product.image_url);
+    if (path) await supabase.storage.from(BUCKET).remove([path]);
     refresh();
   }
+
 
   const categoryName = (id: string | null) =>
     categories.data?.find((c) => c.id === id)?.name ?? "بدون قسم";
