@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,58 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import { useCategories, useProducts, type Product } from "@/lib/store-data";
 
+const BUCKET = "product-images";
+const IMAGE_PREFIX = "/api/public/product-image/";
+
+function storagePathFromUrl(url: string | null | undefined) {
+  if (!url) return null;
+  const idx = url.indexOf(IMAGE_PREFIX);
+  if (idx === -1) return null;
+  return decodeURIComponent(url.slice(idx + IMAGE_PREFIX.length));
+}
+
 export function ProductsManager() {
   const products = useProducts();
   const categories = useCategories(true);
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["products"] });
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("الملف المختار ليس صورة");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 10 ميجابايت");
+      return;
+    }
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: false });
+    setUploading(false);
+    if (error) {
+      toast.error("تعذّر رفع الصورة");
+      return;
+    }
+    const oldPath = storagePathFromUrl(editing?.image_url);
+    if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath]);
+    setEditing((prev) => ({ ...prev, image_url: `${IMAGE_PREFIX}${path}` }));
+    toast.success("تم رفع الصورة");
+  }
+
+  async function removeImage() {
+    const oldPath = storagePathFromUrl(editing?.image_url);
+    if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath]);
+    setEditing((prev) => ({ ...prev, image_url: null }));
+  }
+
 
   async function save() {
     if (!editing?.name?.trim()) {
