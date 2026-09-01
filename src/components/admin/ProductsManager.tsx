@@ -244,11 +244,12 @@ export function ProductsManager() {
               />
               {editing?.image_url ? (
                 <div className="relative overflow-hidden rounded-2xl bg-muted">
-                  <img
-                    src={editing.image_url}
+                  <ProductImage
+                    imageUrl={editing.image_url}
                     alt="صورة المنتج"
                     className="h-40 w-full object-cover"
                   />
+
                   <Button
                     type="button"
                     variant="secondary"
