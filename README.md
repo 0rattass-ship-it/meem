@@ -1,14 +1,106 @@
-# Welcome to your Lovable project
+# Summit Buffet Orders
+
+أريد بناء تطبيق متجر طلبات عربي باسم بوفيه قمة الجبل من الصفر.
+
+أريد التطبيق بنفس فكرة وتصميم المتجر الحالي: واجهة عربية بالكامل، RTL، ألوان بني وبيج، تصميم مرتب ومتجاوب مع الجوال.
+
+المتجر:
+
+الصفحة الرئيسية تعرض اسم المتجر وشعاره.
+
+أقسام المنتجات، مثل: الوجبات السريعة، الساندويتشات، العصائر، الحلويات وغيرها.
+
+https://saqf-alwadi-admin-panel.lovable.app
+
+https://saqf-alwadi-admin-panel.lovable.app/auth
+
+هذه الروابط والصور مرجع فقط لفهم التصميم والوظائف المطلوبة. أريد بناء المشروع من الصفر في هذا المشروع الجديد، مع الحفاظ على نفس فكرة وتصميم المتجر، وإضافة نظام إدارة الإضافات بالكامل. لا تحاول تعديل أو الوصول إلى المشاريع الموجودة في الروابط.
+
+أستطيع إضافة عدد غير محدود من الأقسام والمنتجات من لوحة التحكم.
+
+كل منتج يحتوي على: الاسم، الصورة، الوصف، السعر، القسم، وحالة التوفر.
+
+العميل يستطيع إضافة المنتجات للسلة وزيادة أو تقليل الكمية.
+
+عرض إجمالي السلة.
+
+صفحة إتمام الطلب.
+
+الطلب يكون بسيطًا ولا يحتاج العميل إلى إنشاء حساب.
+
+أريد أن تصل الطلبات إلى لوحة التحكم، مع إمكانية إدارتها.
+
+الإضافات — مهمة جدًا: أريد نظامًا كاملًا لإدارة إضافات المنتجات، مثل:
+
+شطة
+
+جبن
+
+صوص
+
+بطاطس
+
+أي إضافة أخرى.
+
+من لوحة التحكم أريد قسمًا مستقلًا باسم إدارة الإضافات أستطيع من خلاله:
+
+إضافة إضافة جديدة.
+
+تعديل الإضافة.
+
+حذف الإضافة.
+
+تحديد سعر الإضافة.
+
+تفعيل أو تعطيل الإضافة.
+
+ربط الإضافة بمنتج واحد أو أكثر.
+
+وعند دخول العميل إلى المنتج، تظهر له الإضافات المرتبطة بهذا المنتج ويستطيع اختيارها قبل إضافة المنتج إلى السلة، ويُضاف سعر الإضافات إلى إجمالي الطلب.
+
+لوحة التحكم:
+
+لوحة تحكم منفصلة وآمنة لا تظهر للعملاء داخل المتجر.
+
+تسجيل دخول للمديرة بالبريد وكلمة المرور.
+
+إدارة الأقسام.
+
+إدارة المنتجات.
+
+إدارة الإضافات.
+
+إدارة الطلبات.
+
+تغيير حالة الطلب: جديد، قيد التجهيز، جاهز، مكتمل، ملغي.
+
+لا يستطيع أي شخص الوصول إلى لوحة التحكم بمجرد معرفة الرابط؛ يجب التحقق من صلاحية حساب المديرة من الخلفية.
+
+مهم جدًا:
+
+لا تعرض زر «لوحة التحكم» للعملاء في المتجر.
+
+لا تسمح لأي مستخدم عادي بالدخول إلى لوحة التحكم حتى لو عرف رابطها.
+
+اجعل بيانات المنتجات والأقسام والإضافات والطلبات محفوظة بشكل دائم في قاعدة بيانات.
+
+اجعل المتجر ولوحة التحكم مرتبطين بنفس قاعدة البيانات.
+
+التصميم يكون قريبًا من تصميم متجر «قِمة الجبل» الحالي الذي أريده، وليس لوحة تحكم منفصلة بتصميم مختلف تمامًا.
+
+أريد أن يكون كل شيء قابلًا للإدارة من لوحة التحكم بدون الحاجة لتعديل الكود.
 
 This project was built with [Lovable](https://lovable.dev).
 
+**Live app**: https://buffet-summit-ordering.lovable.app
+
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/15574b17-fc53-4c8a-89bf-4e538587122a).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +112,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
