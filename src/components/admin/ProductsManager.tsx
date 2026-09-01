@@ -19,16 +19,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import { useCategories, useProducts, type Product } from "@/lib/store-data";
+import {
+  BUCKET,
+  IMAGE_PREFIX,
+  ProductImage,
+  storagePathFromUrl,
+} from "@/lib/product-image";
 
-const BUCKET = "product-images";
-const IMAGE_PREFIX = "/api/public/product-image/";
-
-function storagePathFromUrl(url: string | null | undefined) {
-  if (!url) return null;
-  const idx = url.indexOf(IMAGE_PREFIX);
-  if (idx === -1) return null;
-  return decodeURIComponent(url.slice(idx + IMAGE_PREFIX.length));
-}
 
 export function ProductsManager() {
   const products = useProducts();
