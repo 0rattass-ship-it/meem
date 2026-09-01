@@ -11,10 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "دخول الإدارة — بوفيه قمة الجبل" },
-      { name: "description", content: "صفحة دخول خاصة بإدارة بوفيه قمة الجبل." },
+      { title: "دخول الإدارة — مِيم | MEEM" },
+      { name: "description", content: "صفحة دخول خاصة بإدارة مِيم | MEEM." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "دخول الإدارة — بوفيه قمة الجبل" },
+      { property: "og:title", content: "دخول الإدارة — مِيم | MEEM" },
       { property: "og:description", content: "صفحة دخول خاصة بالإدارة." },
     ],
   }),

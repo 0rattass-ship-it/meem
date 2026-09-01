@@ -13,10 +13,10 @@ import { OrdersManager } from "@/components/admin/OrdersManager";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم — بوفيه قمة الجبل" },
+      { title: "لوحة التحكم — مِيم | MEEM" },
       { name: "description", content: "إدارة الأقسام والمنتجات والإضافات والطلبات." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "لوحة التحكم — بوفيه قمة الجبل" },
+      { property: "og:title", content: "لوحة التحكم — مِيم | MEEM" },
       { property: "og:description", content: "إدارة الأقسام والمنتجات والإضافات والطلبات." },
     ],
   }),
