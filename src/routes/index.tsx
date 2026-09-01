@@ -205,16 +205,14 @@ function ProductCard({
         onClick={onOpen}
         className="mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            loading="lazy"
-            className="size-full object-cover"
-          />
-        ) : (
-          <UtensilsCrossed className="size-10 text-brand-soft" />
-        )}
+        <ProductImage
+          imageUrl={product.image_url}
+          alt={product.name}
+          loading="lazy"
+          className="size-full object-cover"
+          fallback={<UtensilsCrossed className="size-10 text-brand-soft" />}
+        />
+
       </button>
       <button onClick={onOpen} className="text-center">
         <h3 className="font-bold text-foreground">{product.name}</h3>
