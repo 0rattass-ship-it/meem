@@ -19,16 +19,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import { useCategories, useProducts, type Product } from "@/lib/store-data";
+import {
+  BUCKET,
+  IMAGE_PREFIX,
+  ProductImage,
+  storagePathFromUrl,
+} from "@/lib/product-image";
 
-const BUCKET = "product-images";
-const IMAGE_PREFIX = "/api/public/product-image/";
-
-function storagePathFromUrl(url: string | null | undefined) {
-  if (!url) return null;
-  const idx = url.indexOf(IMAGE_PREFIX);
-  if (idx === -1) return null;
-  return decodeURIComponent(url.slice(idx + IMAGE_PREFIX.length));
-}
 
 export function ProductsManager() {
   const products = useProducts();
@@ -147,13 +144,12 @@ export function ProductsManager() {
           <li key={product.id} className="card-soft p-4">
             <div className="flex items-start gap-3">
               <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                {product.image_url && (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="size-full object-cover"
-                  />
-                )}
+                <ProductImage
+                  imageUrl={product.image_url}
+                  alt={product.name}
+                  className="size-full object-cover"
+                />
+
               </div>
               <div className="flex-1">
                 <p className="font-bold">{product.name}</p>
@@ -248,11 +244,12 @@ export function ProductsManager() {
               />
               {editing?.image_url ? (
                 <div className="relative overflow-hidden rounded-2xl bg-muted">
-                  <img
-                    src={editing.image_url}
+                  <ProductImage
+                    imageUrl={editing.image_url}
                     alt="صورة المنتج"
                     className="h-40 w-full object-cover"
                   />
+
                   <Button
                     type="button"
                     variant="secondary"

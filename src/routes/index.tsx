@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
+import { ProductImage } from "@/lib/product-image";
+
 import {
   useAddons,
   useCategories,
@@ -205,16 +207,14 @@ function ProductCard({
         onClick={onOpen}
         className="mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            loading="lazy"
-            className="size-full object-cover"
-          />
-        ) : (
-          <UtensilsCrossed className="size-10 text-brand-soft" />
-        )}
+        <ProductImage
+          imageUrl={product.image_url}
+          alt={product.name}
+          loading="lazy"
+          className="size-full object-cover"
+          fallback={<UtensilsCrossed className="size-10 text-brand-soft" />}
+        />
+
       </button>
       <button onClick={onOpen} className="text-center">
         <h3 className="font-bold text-foreground">{product.name}</h3>
@@ -271,13 +271,12 @@ function ProductDialog({
           <DialogDescription>{product.description || "اختر الكمية والإضافات"}</DialogDescription>
         </DialogHeader>
 
-        {product.image_url && (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="h-40 w-full rounded-2xl object-cover"
-          />
-        )}
+        <ProductImage
+          imageUrl={product.image_url}
+          alt={product.name}
+          className="h-40 w-full rounded-2xl object-cover"
+        />
+
 
         {addons.length > 0 && (
           <div className="space-y-2">
