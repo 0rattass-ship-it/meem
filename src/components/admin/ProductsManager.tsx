@@ -144,13 +144,12 @@ export function ProductsManager() {
           <li key={product.id} className="card-soft p-4">
             <div className="flex items-start gap-3">
               <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                {product.image_url && (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="size-full object-cover"
-                  />
-                )}
+                <ProductImage
+                  imageUrl={product.image_url}
+                  alt={product.name}
+                  className="size-full object-cover"
+                />
+
               </div>
               <div className="flex-1">
                 <p className="font-bold">{product.name}</p>
