@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
+import { ProductImage } from "@/lib/product-image";
+
 import {
   useAddons,
   useCategories,
