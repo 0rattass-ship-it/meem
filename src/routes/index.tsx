@@ -24,15 +24,15 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "بوفيه قمة الجبل — اطلب وجبتك الآن" },
+      { title: "مِيم | MEEM — اطلب وجبتك الآن" },
       {
         name: "description",
-        content: "قائمة بوفيه قمة الجبل: وجبات سريعة، ساندويتشات، عصائر وحلويات. اختر طلبك وأرسله مباشرة.",
+        content: "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات. اختر طلبك وأرسله مباشرة.",
       },
-      { property: "og:title", content: "بوفيه قمة الجبل — اطلب وجبتك الآن" },
+      { property: "og:title", content: "مِيم | MEEM — اطلب وجبتك الآن" },
       {
         property: "og:description",
-        content: "قائمة بوفيه قمة الجبل: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
+        content: "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
       },
     ],
   }),
@@ -79,7 +79,7 @@ function StorePage() {
             <Store className="size-7" />
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-extrabold text-primary">بوفيه قمة الجبل</h1>
+            <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
             <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
           </div>
         </div>

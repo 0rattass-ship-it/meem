@@ -14,9 +14,9 @@ import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "إتمام الطلب — بوفيه قمة الجبل" },
-      { name: "description", content: "أكمل بيانات طلبك من بوفيه قمة الجبل وأرسله مباشرة." },
-      { property: "og:title", content: "إتمام الطلب — بوفيه قمة الجبل" },
+      { title: "إتمام الطلب — مِيم | MEEM" },
+      { name: "description", content: "أكمل بيانات طلبك من مِيم | MEEM وأرسله مباشرة." },
+      { property: "og:title", content: "إتمام الطلب — مِيم | MEEM" },
       { property: "og:description", content: "أكمل بيانات طلبك وأرسله مباشرة." },
     ],
   }),
