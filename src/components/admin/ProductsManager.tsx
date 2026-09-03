@@ -18,7 +18,13 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
-import { useCategories, useProducts, type Product } from "@/lib/store-data";
+import {
+  PRODUCT_BADGES,
+  useCategories,
+  useProducts,
+  type Product,
+  type ProductBadge,
+} from "@/lib/store-data";
 import {
   BUCKET,
   IMAGE_PREFIX,
