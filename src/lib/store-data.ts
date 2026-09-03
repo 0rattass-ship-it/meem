@@ -8,6 +8,14 @@ export type Category = {
   is_active: boolean;
 };
 
+export type ProductBadge = "none" | "always" | "reservation";
+
+export const PRODUCT_BADGES: { value: ProductBadge; label: string }[] = [
+  { value: "none", label: "بدون علامة" },
+  { value: "always", label: "متوفر دائماً" },
+  { value: "reservation", label: "بالحجز" },
+];
+
 export type Product = {
   id: string;
   category_id: string | null;
@@ -17,6 +25,7 @@ export type Product = {
   image_url: string | null;
   is_available: boolean;
   sort_order: number;
+  badge: ProductBadge;
 };
 
 export type Addon = {
