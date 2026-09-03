@@ -87,7 +87,82 @@ export function useProductAddons() {
   });
 }
 
+export type DeliveryTime = {
+  id: string;
+  label: string;
+  sort_order: number;
+  is_active: boolean;
+};
+
+export type DeliveryLocation = {
+  id: string;
+  name: string;
+  note: string | null;
+  sort_order: number;
+  is_active: boolean;
+};
+
+export type BookingDay = { id: string; day_of_week: number; is_active: boolean };
+
+export const WEEK_DAYS = [
+  { value: 0, label: "الأحد" },
+  { value: 1, label: "الإثنين" },
+  { value: 2, label: "الثلاثاء" },
+  { value: 3, label: "الأربعاء" },
+  { value: 4, label: "الخميس" },
+  { value: 5, label: "الجمعة" },
+  { value: 6, label: "السبت" },
+] as const;
+
+export function dayLabel(day: number | null | undefined) {
+  return WEEK_DAYS.find((d) => d.value === day)?.label ?? "";
+}
+
+export function useDeliveryTimes(includeInactive = false) {
+  return useQuery({
+    queryKey: ["delivery_times", includeInactive],
+    queryFn: async () => {
+      let query = supabase.from("delivery_times").select("*").order("sort_order").order("created_at");
+      if (!includeInactive) query = query.eq("is_active", true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as DeliveryTime[];
+    },
+  });
+}
+
+export function useDeliveryLocations(includeInactive = false) {
+  return useQuery({
+    queryKey: ["delivery_locations", includeInactive],
+    queryFn: async () => {
+      let query = supabase
+        .from("delivery_locations")
+        .select("*")
+        .order("sort_order")
+        .order("created_at");
+      if (!includeInactive) query = query.eq("is_active", true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as DeliveryLocation[];
+    },
+  });
+}
+
+export function useBookingDays(includeInactive = false) {
+  return useQuery({
+    queryKey: ["booking_days", includeInactive],
+    queryFn: async () => {
+      let query = supabase.from("booking_days").select("*").order("day_of_week");
+      if (!includeInactive) query = query.eq("is_active", true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as BookingDay[];
+    },
+  });
+}
+
 export const ORDER_STATUSES = [
+
   { value: "new", label: "جديد" },
   { value: "preparing", label: "قيد التجهيز" },
   { value: "ready", label: "جاهز" },

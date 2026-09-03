@@ -9,6 +9,8 @@ import { CategoriesManager } from "@/components/admin/CategoriesManager";
 import { ProductsManager } from "@/components/admin/ProductsManager";
 import { AddonsManager } from "@/components/admin/AddonsManager";
 import { OrdersManager } from "@/components/admin/OrdersManager";
+import { DeliverySettingsManager } from "@/components/admin/DeliverySettingsManager";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -103,21 +105,27 @@ function AdminPage() {
       <main className="mx-auto max-w-3xl px-4 py-6">
         <Tabs defaultValue="orders">
           <TabsList className="mb-6 w-full justify-between rounded-full bg-surface p-1">
-            <TabsTrigger className="flex-1 rounded-full" value="orders">
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="orders">
               الطلبات
             </TabsTrigger>
-            <TabsTrigger className="flex-1 rounded-full" value="addons">
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="delivery">
+              التسليم
+            </TabsTrigger>
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="addons">
               الإضافات
             </TabsTrigger>
-            <TabsTrigger className="flex-1 rounded-full" value="products">
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="products">
               المنتجات
             </TabsTrigger>
-            <TabsTrigger className="flex-1 rounded-full" value="categories">
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="categories">
               الأقسام
             </TabsTrigger>
           </TabsList>
           <TabsContent value="orders">
             <OrdersManager />
+          </TabsContent>
+          <TabsContent value="delivery">
+            <DeliverySettingsManager />
           </TabsContent>
           <TabsContent value="addons">
             <AddonsManager />
@@ -129,6 +137,7 @@ function AdminPage() {
             <CategoriesManager />
           </TabsContent>
         </Tabs>
+
       </main>
     </div>
   );
