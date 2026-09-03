@@ -196,6 +196,7 @@ export type Database = {
       }
       products: {
         Row: {
+          badge: Database["public"]["Enums"]["product_badge"]
           category_id: string | null
           created_at: string
           description: string | null
@@ -208,6 +209,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge?: Database["public"]["Enums"]["product_badge"]
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -220,6 +222,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge?: Database["public"]["Enums"]["product_badge"]
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -288,6 +291,7 @@ export type Database = {
     Enums: {
       app_role: "admin"
       order_status: "new" | "preparing" | "ready" | "completed" | "cancelled"
+      product_badge: "none" | "always" | "reservation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -417,6 +421,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin"],
       order_status: ["new", "preparing", "ready", "completed", "cancelled"],
+      product_badge: ["none", "always", "reservation"],
     },
   },
 } as const
