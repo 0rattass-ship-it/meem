@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_days: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -63,6 +87,63 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_locations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          note: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_times: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
           sort_order?: number
           updated_at?: string
         }
@@ -122,9 +203,12 @@ export type Database = {
       orders: {
         Row: {
           address: string | null
+          booking_day: number | null
           created_at: string
           customer_name: string
           customer_phone: string
+          delivery_location: string | null
+          delivery_time: string | null
           id: string
           notes: string | null
           order_number: number
@@ -134,9 +218,12 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          booking_day?: number | null
           created_at?: string
           customer_name: string
           customer_phone: string
+          delivery_location?: string | null
+          delivery_time?: string | null
           id?: string
           notes?: string | null
           order_number?: number
@@ -146,9 +233,12 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          booking_day?: number | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
+          delivery_location?: string | null
+          delivery_time?: string | null
           id?: string
           notes?: string | null
           order_number?: number
@@ -277,16 +367,30 @@ export type Database = {
         }
         Returns: boolean
       }
-      place_order: {
-        Args: {
-          _address: string
-          _customer_name: string
-          _customer_phone: string
-          _items: Json
-          _notes: string
-        }
-        Returns: number
-      }
+      place_order:
+        | {
+            Args: {
+              _address: string
+              _customer_name: string
+              _customer_phone: string
+              _items: Json
+              _notes: string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              _address: string
+              _booking_day?: number
+              _customer_name: string
+              _customer_phone: string
+              _delivery_location_id?: string
+              _delivery_time_id?: string
+              _items: Json
+              _notes: string
+            }
+            Returns: number
+          }
     }
     Enums: {
       app_role: "admin"
