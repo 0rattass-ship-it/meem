@@ -8,8 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
+import { dayLabel, useBookingDays, useDeliveryLocations, useDeliveryTimes } from "@/lib/store-data";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -34,8 +42,19 @@ function CheckoutPage() {
   const cart = useCart();
   const navigate = useNavigate();
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", notes: "" });
+  const [deliveryTimeId, setDeliveryTimeId] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [bookingDay, setBookingDay] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState<number | null>(null);
+
+  const times = useDeliveryTimes();
+  const locations = useDeliveryLocations();
+  const days = useBookingDays();
+
+  const timeOptions = times.data ?? [];
+  const locationOptions = locations.data ?? [];
+  const dayOptions = days.data ?? [];
 
   async function submit() {
     const parsed = schema.safeParse(form);
@@ -47,12 +66,27 @@ function CheckoutPage() {
       toast.error("السلة فارغة");
       return;
     }
+    if (timeOptions.length > 0 && !deliveryTimeId) {
+      toast.error("اختر وقت التسليم");
+      return;
+    }
+    if (dayOptions.length > 0 && !bookingDay) {
+      toast.error("اختر يوم الحجز");
+      return;
+    }
+    if (locationOptions.length > 0 && !locationId) {
+      toast.error("اختر مكان التسليم");
+      return;
+    }
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       _customer_name: parsed.data.customer_name,
       _customer_phone: parsed.data.customer_phone,
       _address: parsed.data.address ?? "",
       _notes: parsed.data.notes ?? "",
+      _delivery_time_id: deliveryTimeId || undefined,
+      _delivery_location_id: locationId || undefined,
+      _booking_day: bookingDay === "" ? undefined : Number(bookingDay),
 
       _items: cart.items.map((item) => ({
         product_id: item.productId,
@@ -69,6 +103,7 @@ function CheckoutPage() {
     cart.clear();
     setDone(data);
   }
+
 
 
   if (done !== null) {
@@ -198,6 +233,70 @@ function CheckoutPage() {
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
+        </section>
+
+        <section className="card-soft space-y-4 p-4">
+          <h2 className="font-bold text-foreground">التسليم والحجز</h2>
+
+          {timeOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label>وقت التسليم</Label>
+              <Select value={deliveryTimeId} onValueChange={setDeliveryTimeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر وقت التسليم" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeOptions.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {dayOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label>يوم الحجز</Label>
+              <Select value={bookingDay} onValueChange={setBookingDay}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر اليوم" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dayOptions.map((d) => (
+                    <SelectItem key={d.id} value={String(d.day_of_week)}>
+                      {dayLabel(d.day_of_week)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {locationOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label>مكان التسليم</Label>
+              <Select value={locationId} onValueChange={setLocationId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر مكان التسليم" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locationOptions.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                      {l.note ? ` — ${l.note}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {timeOptions.length === 0 && dayOptions.length === 0 && locationOptions.length === 0 && (
+            <p className="text-sm text-muted-foreground">لا توجد خيارات تسليم متاحة حالياً.</p>
+          )}
+
           <Button
             size="lg"
             className="w-full rounded-full"
@@ -207,6 +306,7 @@ function CheckoutPage() {
             {sending ? "جاري الإرسال…" : "إرسال الطلب"}
           </Button>
         </section>
+
       </main>
     </div>
   );

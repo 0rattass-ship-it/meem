@@ -32,8 +32,12 @@ type Order = {
   total: number;
   status: string;
   created_at: string;
+  delivery_time: string | null;
+  delivery_location: string | null;
+  booking_day: number | null;
   order_items: OrderItem[];
 };
+
 
 export function OrdersManager() {
   const qc = useQueryClient();
