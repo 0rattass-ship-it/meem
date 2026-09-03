@@ -93,6 +93,7 @@ export function ProductsManager() {
       category_id: editing.category_id,
       is_available: editing.is_available ?? true,
       sort_order: Number(editing.sort_order ?? 0),
+      badge: (editing.badge ?? "none") as ProductBadge,
     };
     const { error } = editing.id
       ? await supabase.from("products").update(payload).eq("id", editing.id)
@@ -138,7 +139,14 @@ export function ProductsManager() {
         <Button
           className="rounded-full"
           onClick={() =>
-            setEditing({ name: "", price: 0, is_available: true, sort_order: 1, description: "" })
+            setEditing({
+              name: "",
+              price: 0,
+              is_available: true,
+              sort_order: 1,
+              description: "",
+              badge: "none",
+            })
           }
         >
           <Plus className="size-4" /> منتج جديد
@@ -162,6 +170,11 @@ export function ProductsManager() {
                 <p className="text-sm text-muted-foreground">
                   {categoryName(product.category_id)} — {formatPrice(Number(product.price))}
                 </p>
+                {product.badge && product.badge !== "none" && (
+                  <span className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
+                    {PRODUCT_BADGES.find((b) => b.value === product.badge)?.label}
+                  </span>
+                )}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
@@ -290,6 +303,24 @@ export function ProductsManager() {
               </Button>
             </div>
 
+            <div className="space-y-2">
+              <Label>العلامة الخاصة</Label>
+              <Select
+                value={editing?.badge ?? "none"}
+                onValueChange={(v) => setEditing({ ...editing, badge: v as ProductBadge })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="بدون علامة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRODUCT_BADGES.map((b) => (
+                    <SelectItem key={b.value} value={b.value}>
+                      {b.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
