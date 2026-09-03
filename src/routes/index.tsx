@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Store, UtensilsCrossed, ShoppingCart, Plus, Minus } from "lucide-react";
+import {
+  Store,
+  UtensilsCrossed,
+  ShoppingCart,
+  Plus,
+  Minus,
+  BadgeCheck,
+  CalendarClock,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +29,7 @@ import {
   useProductAddons,
   useProducts,
   type Product,
+  type ProductBadge,
 } from "@/lib/store-data";
 
 export const Route = createFileRoute("/")({
@@ -164,6 +173,29 @@ function StorePage() {
   );
 }
 
+function ProductBadgeTag({
+  badge,
+  className = "",
+}: {
+  badge: ProductBadge | null | undefined;
+  className?: string;
+}) {
+  if (!badge || badge === "none") return null;
+  const always = badge === "always";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-[var(--shadow-soft)] ${
+        always
+          ? "bg-primary text-primary-foreground"
+          : "bg-secondary text-secondary-foreground"
+      } ${className}`}
+    >
+      {always ? <BadgeCheck className="size-3.5" /> : <CalendarClock className="size-3.5" />}
+      {always ? "متوفر دائماً" : "بالحجز"}
+    </span>
+  );
+}
+
 function CategoryChip({
   label,
   active,
@@ -205,8 +237,9 @@ function ProductCard({
     <div className="card-soft flex flex-col overflow-hidden p-3">
       <button
         onClick={onOpen}
-        className="mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
+        className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
+        <ProductBadgeTag badge={product.badge} className="absolute right-2 top-2" />
         <ProductImage
           imageUrl={product.image_url}
           alt={product.name}
@@ -276,6 +309,7 @@ function ProductDialog({
           alt={product.name}
           className="h-40 w-full rounded-2xl object-cover"
         />
+        <ProductBadgeTag badge={product.badge} />
 
 
         {addons.length > 0 && (
