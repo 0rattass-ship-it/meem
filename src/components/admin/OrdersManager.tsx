@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, type CartAddon } from "@/lib/cart";
-import { ORDER_STATUSES, statusLabel } from "@/lib/store-data";
+import { ORDER_STATUSES, dayLabel, statusLabel } from "@/lib/store-data";
 
 type OrderItem = {
   id: string;
@@ -97,9 +97,25 @@ export function OrdersManager() {
                 {order.address && (
                   <p className="text-xs text-muted-foreground">العنوان: {order.address}</p>
                 )}
+                {order.delivery_time && (
+                  <p className="text-xs text-muted-foreground">
+                    وقت التسليم: {order.delivery_time}
+                  </p>
+                )}
+                {order.booking_day !== null && (
+                  <p className="text-xs text-muted-foreground">
+                    يوم الحجز: {dayLabel(order.booking_day)}
+                  </p>
+                )}
+                {order.delivery_location && (
+                  <p className="text-xs text-muted-foreground">
+                    مكان التسليم: {order.delivery_location}
+                  </p>
+                )}
                 {order.notes && (
                   <p className="text-xs text-muted-foreground">ملاحظات: {order.notes}</p>
                 )}
+
                 <p className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleString("ar-EG")}
                 </p>
