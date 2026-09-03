@@ -210,7 +210,7 @@ function ProductCard({
         <ProductImage
           imageUrl={product.image_url}
           alt={product.name}
-          loading="lazy"
+          loading="eager"
           className="size-full object-cover"
           fallback={<UtensilsCrossed className="size-10 text-brand-soft" />}
         />
