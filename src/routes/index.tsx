@@ -348,6 +348,17 @@ function ProductDialog({
         />
         <ProductBadgeTag badge={product.badge} />
 
+        {!bookingAvailable && (
+          <div className="rounded-2xl bg-destructive/10 p-3 text-center">
+            <p className="font-bold text-destructive">غير متوفر الحجز اليوم</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              هذا المنتج غير متاح للحجز اليوم، يرجى العودة في يوم الحجز المتاح
+              {bookingDaysText ? `: ${bookingDaysText}` : ""}.
+            </p>
+          </div>
+        )}
+
+
 
         {addons.length > 0 && (
           <div className="space-y-2">
