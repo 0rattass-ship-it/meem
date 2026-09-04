@@ -408,6 +408,7 @@ function ProductDialog({
         <Button
           size="lg"
           className="w-full rounded-full"
+          disabled={!bookingAvailable}
           onClick={() => {
             cart.addItem({
               productId: product.id,
