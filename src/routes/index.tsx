@@ -183,6 +183,8 @@ function StorePage() {
       <ProductDialog
         product={selected}
         addons={selected ? addonsForProduct(selected.id) : []}
+        bookingAvailable={selected ? availableToday(selected.id) : true}
+        bookingDaysText={selected ? daysText(selected.id) : ""}
         onClose={() => setSelected(null)}
       />
     </div>
