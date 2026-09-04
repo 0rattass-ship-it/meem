@@ -59,11 +59,54 @@ function CheckoutPage() {
 
   const times = useDeliveryTimes();
   const locations = useDeliveryLocations();
-  const days = useBookingDays();
+  const productBookingDays = useProductBookingDays();
+  const productTimes = useProductDeliveryTimes();
 
-  const timeOptions = times.data ?? [];
   const locationOptions = locations.data ?? [];
-  const dayOptions = days.data ?? [];
+  const productIds = useMemo(
+    () => Array.from(new Set(cart.items.map((i) => i.productId))),
+    [cart.items],
+  );
+
+  // الأيام والأوقات المشتركة بين جميع منتجات السلة فقط
+  const dayOptions = useMemo(() => {
+    let allowed = WEEK_DAYS.map((d) => d.value as number);
+    for (const id of productIds) {
+      const own = productDays(productBookingDays.data, id);
+      if (own.length > 0) allowed = allowed.filter((d) => own.includes(d));
+    }
+    return allowed.sort((a, b) => a - b);
+  }, [productIds, productBookingDays.data]);
+
+  const timeOptions = useMemo(() => {
+    let allowed = times.data ?? [];
+    for (const id of productIds) {
+      const own = productTimeIds(productTimes.data, id);
+      if (own.length > 0) allowed = allowed.filter((t) => own.includes(t.id));
+    }
+    return allowed;
+  }, [productIds, productTimes.data, times.data]);
+
+  const hasDayRestriction = productIds.some(
+    (id) => productDays(productBookingDays.data, id).length > 0,
+  );
+  const hasTimeRestriction = productIds.some(
+    (id) => productTimeIds(productTimes.data, id).length > 0,
+  );
+  const conflict =
+    cart.items.length > 0 &&
+    ((hasDayRestriction && dayOptions.length === 0) ||
+      (hasTimeRestriction && timeOptions.length === 0));
+
+  useEffect(() => {
+    if (bookingDay !== "" && !dayOptions.includes(Number(bookingDay))) setBookingDay("");
+  }, [dayOptions, bookingDay]);
+
+  useEffect(() => {
+    if (deliveryTimeId && !timeOptions.some((t) => t.id === deliveryTimeId))
+      setDeliveryTimeId("");
+  }, [timeOptions, deliveryTimeId]);
+
 
   async function submit() {
     const parsed = schema.safeParse(form);
