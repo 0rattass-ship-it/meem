@@ -226,7 +226,7 @@ export function ProductsManager() {
               >
                 {product.is_available ? "تعطيل التوفر" : "تفعيل التوفر"}
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => setEditing(product)}>
+              <Button variant="ghost" size="icon" onClick={() => openEditor(product)}>
                 <Pencil className="size-4" />
               </Button>
               <Button
