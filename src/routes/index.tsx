@@ -151,6 +151,8 @@ function StorePage() {
                       key={product.id}
                       product={product}
                       hasAddons={addonsForProduct(product.id).length > 0}
+                      bookingAvailable={availableToday(product.id)}
+                      bookingDaysText={daysText(product.id)}
                       onOpen={() => setSelected(product)}
                     />
                   ))}
