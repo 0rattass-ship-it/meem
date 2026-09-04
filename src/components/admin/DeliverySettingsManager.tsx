@@ -175,19 +175,11 @@ export function DeliverySettingsManager() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-bold text-primary">أيام الحجز المتاحة</h2>
-        <ul className="card-soft divide-y divide-border p-2">
-          {WEEK_DAYS.map((d) => {
-            const row = (days.data ?? []).find((x) => x.day_of_week === d.value);
-            const active = row ? row.is_active : false;
-            return (
-              <li key={d.value} className="flex items-center justify-between px-2 py-3">
-                <Label className="text-sm">{d.label}</Label>
-                <Switch checked={active} onCheckedChange={(v) => toggleDay(d.value, row, v)} />
-              </li>
-            );
-          })}
-        </ul>
+        <h2 className="font-bold text-primary">أيام الحجز</h2>
+        <p className="card-soft p-3 text-sm text-muted-foreground">
+          أيام الحجز وأوقات التسليم تُحدَّد لكل منتج على حدة من تبويب «المنتجات» عند إضافة أو تعديل
+          المنتج.
+        </p>
       </section>
 
       <section className="space-y-3">
