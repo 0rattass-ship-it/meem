@@ -294,6 +294,23 @@ function CheckoutPage() {
         <section className="card-soft space-y-4 p-4">
           <h2 className="font-bold text-foreground">التسليم والحجز</h2>
 
+          {conflict && (
+            <div className="rounded-2xl bg-destructive/10 p-3 text-sm">
+              <p className="font-bold text-destructive">
+                منتجات السلة لا تشترك في نفس أيام أو أوقات الحجز
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                يرجى إرسال هذه المنتجات في طلبات منفصلة، أو إزالة أحدها لإكمال الطلب.
+              </p>
+            </div>
+          )}
+
+          {(hasDayRestriction || hasTimeRestriction) && !conflict && (
+            <p className="text-xs text-muted-foreground">
+              تظهر لك فقط الأيام والأوقات المتاحة لجميع منتجات سلتك.
+            </p>
+          )}
+
           {timeOptions.length > 0 && (
             <div className="space-y-2">
               <Label>وقت التسليم</Label>
@@ -321,8 +338,8 @@ function CheckoutPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {dayOptions.map((d) => (
-                    <SelectItem key={d.id} value={String(d.day_of_week)}>
-                      {dayLabel(d.day_of_week)}
+                    <SelectItem key={d} value={String(d)}>
+                      {dayLabel(d)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -356,7 +373,7 @@ function CheckoutPage() {
           <Button
             size="lg"
             className="w-full rounded-full"
-            disabled={sending || cart.items.length === 0}
+            disabled={sending || cart.items.length === 0 || conflict}
             onClick={submit}
           >
             {sending ? "جاري الإرسال…" : "إرسال الطلب"}
