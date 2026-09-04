@@ -16,11 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import {
   PRODUCT_BADGES,
+  WEEK_DAYS,
+  dayLabel,
+  productDays,
+  productTimeIds,
   useCategories,
+  useDeliveryTimes,
+  useProductBookingDays,
+  useProductDeliveryTimes,
   useProducts,
   type Product,
   type ProductBadge,
@@ -36,12 +44,55 @@ import {
 export function ProductsManager() {
   const products = useProducts();
   const categories = useCategories(true);
+  const times = useDeliveryTimes(true);
+  const bookingDayRows = useProductBookingDays();
+  const timeRows = useProductDeliveryTimes();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [days, setDays] = useState<number[]>([]);
+  const [timeIds, setTimeIds] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ["products"] });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["product_booking_days"] });
+    qc.invalidateQueries({ queryKey: ["product_delivery_times"] });
+  };
+
+  function openEditor(product?: Product) {
+    if (product) {
+      setEditing(product);
+      setDays(productDays(bookingDayRows.data, product.id));
+      setTimeIds(productTimeIds(timeRows.data, product.id));
+    } else {
+      setEditing({
+        name: "",
+        price: 0,
+        is_available: true,
+        sort_order: 1,
+        description: "",
+        badge: "none",
+      });
+      setDays([]);
+      setTimeIds([]);
+    }
+  }
+
+  async function saveSchedule(productId: string) {
+    await supabase.from("product_booking_days").delete().eq("product_id", productId);
+    await supabase.from("product_delivery_times").delete().eq("product_id", productId);
+    if (days.length > 0) {
+      await supabase
+        .from("product_booking_days")
+        .insert(days.map((d) => ({ product_id: productId, day_of_week: d })));
+    }
+    if (timeIds.length > 0) {
+      await supabase
+        .from("product_delivery_times")
+        .insert(timeIds.map((t) => ({ product_id: productId, delivery_time_id: t })));
+    }
+  }
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
