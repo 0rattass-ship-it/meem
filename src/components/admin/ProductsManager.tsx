@@ -188,19 +188,7 @@ export function ProductsManager() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{products.data?.length ?? 0} منتج</span>
-        <Button
-          className="rounded-full"
-          onClick={() =>
-            setEditing({
-              name: "",
-              price: 0,
-              is_available: true,
-              sort_order: 1,
-              description: "",
-              badge: "none",
-            })
-          }
-        >
+        <Button className="rounded-full" onClick={() => openEditor()}>
           <Plus className="size-4" /> منتج جديد
         </Button>
       </div>
