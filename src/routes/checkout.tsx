@@ -17,7 +17,16 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
-import { dayLabel, useBookingDays, useDeliveryLocations, useDeliveryTimes } from "@/lib/store-data";
+import {
+  WEEK_DAYS,
+  dayLabel,
+  productDays,
+  productTimeIds,
+  useDeliveryLocations,
+  useDeliveryTimes,
+  useProductBookingDays,
+  useProductDeliveryTimes,
+} from "@/lib/store-data";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
