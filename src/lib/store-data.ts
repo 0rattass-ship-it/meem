@@ -161,6 +161,51 @@ export function useBookingDays(includeInactive = false) {
   });
 }
 
+export type ProductBookingDay = { id: string; product_id: string; day_of_week: number };
+export type ProductDeliveryTime = { id: string; product_id: string; delivery_time_id: string };
+
+export function useProductBookingDays() {
+  return useQuery({
+    queryKey: ["product_booking_days"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("product_booking_days").select("*");
+      if (error) throw error;
+      return (data ?? []) as ProductBookingDay[];
+    },
+  });
+}
+
+export function useProductDeliveryTimes() {
+  return useQuery({
+    queryKey: ["product_delivery_times"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("product_delivery_times").select("*");
+      if (error) throw error;
+      return (data ?? []) as ProductDeliveryTime[];
+    },
+  });
+}
+
+/** أيام الحجز الخاصة بمنتج (فراغ = بدون قيود) */
+export function productDays(rows: ProductBookingDay[] | undefined, productId: string) {
+  return (rows ?? []).filter((r) => r.product_id === productId).map((r) => r.day_of_week);
+}
+
+export function productTimeIds(rows: ProductDeliveryTime[] | undefined, productId: string) {
+  return (rows ?? []).filter((r) => r.product_id === productId).map((r) => r.delivery_time_id);
+}
+
+/** هل المنتج متاح للحجز اليوم بحسب أيامه المحددة؟ */
+export function isProductAvailableToday(
+  rows: ProductBookingDay[] | undefined,
+  productId: string,
+  today = new Date().getDay(),
+) {
+  const days = productDays(rows, productId);
+  if (days.length === 0) return true;
+  return days.includes(today);
+}
+
 export const ORDER_STATUSES = [
 
   { value: "new", label: "جديد" },

@@ -284,6 +284,71 @@ export type Database = {
           },
         ]
       }
+      product_booking_days: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_booking_days_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_delivery_times: {
+        Row: {
+          created_at: string
+          delivery_time_id: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_time_id: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_time_id?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_delivery_times_delivery_time_id_fkey"
+            columns: ["delivery_time_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_times"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_delivery_times_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           badge: Database["public"]["Enums"]["product_badge"]

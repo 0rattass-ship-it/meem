@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -17,7 +17,16 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
-import { dayLabel, useBookingDays, useDeliveryLocations, useDeliveryTimes } from "@/lib/store-data";
+import {
+  WEEK_DAYS,
+  dayLabel,
+  productDays,
+  productTimeIds,
+  useDeliveryLocations,
+  useDeliveryTimes,
+  useProductBookingDays,
+  useProductDeliveryTimes,
+} from "@/lib/store-data";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -50,11 +59,54 @@ function CheckoutPage() {
 
   const times = useDeliveryTimes();
   const locations = useDeliveryLocations();
-  const days = useBookingDays();
+  const productBookingDays = useProductBookingDays();
+  const productTimes = useProductDeliveryTimes();
 
-  const timeOptions = times.data ?? [];
   const locationOptions = locations.data ?? [];
-  const dayOptions = days.data ?? [];
+  const productIds = useMemo(
+    () => Array.from(new Set(cart.items.map((i) => i.productId))),
+    [cart.items],
+  );
+
+  // الأيام والأوقات المشتركة بين جميع منتجات السلة فقط
+  const dayOptions = useMemo(() => {
+    let allowed = WEEK_DAYS.map((d) => d.value as number);
+    for (const id of productIds) {
+      const own = productDays(productBookingDays.data, id);
+      if (own.length > 0) allowed = allowed.filter((d) => own.includes(d));
+    }
+    return allowed.sort((a, b) => a - b);
+  }, [productIds, productBookingDays.data]);
+
+  const timeOptions = useMemo(() => {
+    let allowed = times.data ?? [];
+    for (const id of productIds) {
+      const own = productTimeIds(productTimes.data, id);
+      if (own.length > 0) allowed = allowed.filter((t) => own.includes(t.id));
+    }
+    return allowed;
+  }, [productIds, productTimes.data, times.data]);
+
+  const hasDayRestriction = productIds.some(
+    (id) => productDays(productBookingDays.data, id).length > 0,
+  );
+  const hasTimeRestriction = productIds.some(
+    (id) => productTimeIds(productTimes.data, id).length > 0,
+  );
+  const conflict =
+    cart.items.length > 0 &&
+    ((hasDayRestriction && dayOptions.length === 0) ||
+      (hasTimeRestriction && timeOptions.length === 0));
+
+  useEffect(() => {
+    if (bookingDay !== "" && !dayOptions.includes(Number(bookingDay))) setBookingDay("");
+  }, [dayOptions, bookingDay]);
+
+  useEffect(() => {
+    if (deliveryTimeId && !timeOptions.some((t) => t.id === deliveryTimeId))
+      setDeliveryTimeId("");
+  }, [timeOptions, deliveryTimeId]);
+
 
   async function submit() {
     const parsed = schema.safeParse(form);
@@ -64,6 +116,10 @@ function CheckoutPage() {
     }
     if (cart.items.length === 0) {
       toast.error("السلة فارغة");
+      return;
+    }
+    if (conflict) {
+      toast.error("لا يوجد يوم أو وقت مشترك بين منتجات السلة، اطلبها في طلبات منفصلة");
       return;
     }
     if (timeOptions.length > 0 && !deliveryTimeId) {
@@ -238,6 +294,23 @@ function CheckoutPage() {
         <section className="card-soft space-y-4 p-4">
           <h2 className="font-bold text-foreground">التسليم والحجز</h2>
 
+          {conflict && (
+            <div className="rounded-2xl bg-destructive/10 p-3 text-sm">
+              <p className="font-bold text-destructive">
+                منتجات السلة لا تشترك في نفس أيام أو أوقات الحجز
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                يرجى إرسال هذه المنتجات في طلبات منفصلة، أو إزالة أحدها لإكمال الطلب.
+              </p>
+            </div>
+          )}
+
+          {(hasDayRestriction || hasTimeRestriction) && !conflict && (
+            <p className="text-xs text-muted-foreground">
+              تظهر لك فقط الأيام والأوقات المتاحة لجميع منتجات سلتك.
+            </p>
+          )}
+
           {timeOptions.length > 0 && (
             <div className="space-y-2">
               <Label>وقت التسليم</Label>
@@ -265,8 +338,8 @@ function CheckoutPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {dayOptions.map((d) => (
-                    <SelectItem key={d.id} value={String(d.day_of_week)}>
-                      {dayLabel(d.day_of_week)}
+                    <SelectItem key={d} value={String(d)}>
+                      {dayLabel(d)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -300,7 +373,7 @@ function CheckoutPage() {
           <Button
             size="lg"
             className="w-full rounded-full"
-            disabled={sending || cart.items.length === 0}
+            disabled={sending || cart.items.length === 0 || conflict}
             onClick={submit}
           >
             {sending ? "جاري الإرسال…" : "إرسال الطلب"}

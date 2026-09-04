@@ -16,11 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 import {
   PRODUCT_BADGES,
+  WEEK_DAYS,
+  dayLabel,
+  productDays,
+  productTimeIds,
   useCategories,
+  useDeliveryTimes,
+  useProductBookingDays,
+  useProductDeliveryTimes,
   useProducts,
   type Product,
   type ProductBadge,
@@ -36,12 +44,55 @@ import {
 export function ProductsManager() {
   const products = useProducts();
   const categories = useCategories(true);
+  const times = useDeliveryTimes(true);
+  const bookingDayRows = useProductBookingDays();
+  const timeRows = useProductDeliveryTimes();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
+  const [days, setDays] = useState<number[]>([]);
+  const [timeIds, setTimeIds] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ["products"] });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["product_booking_days"] });
+    qc.invalidateQueries({ queryKey: ["product_delivery_times"] });
+  };
+
+  function openEditor(product?: Product) {
+    if (product) {
+      setEditing(product);
+      setDays(productDays(bookingDayRows.data, product.id));
+      setTimeIds(productTimeIds(timeRows.data, product.id));
+    } else {
+      setEditing({
+        name: "",
+        price: 0,
+        is_available: true,
+        sort_order: 1,
+        description: "",
+        badge: "none",
+      });
+      setDays([]);
+      setTimeIds([]);
+    }
+  }
+
+  async function saveSchedule(productId: string) {
+    await supabase.from("product_booking_days").delete().eq("product_id", productId);
+    await supabase.from("product_delivery_times").delete().eq("product_id", productId);
+    if (days.length > 0) {
+      await supabase
+        .from("product_booking_days")
+        .insert(days.map((d) => ({ product_id: productId, day_of_week: d })));
+    }
+    if (timeIds.length > 0) {
+      await supabase
+        .from("product_delivery_times")
+        .insert(timeIds.map((t) => ({ product_id: productId, delivery_time_id: t })));
+    }
+  }
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -95,13 +146,14 @@ export function ProductsManager() {
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
     };
-    const { error } = editing.id
-      ? await supabase.from("products").update(payload).eq("id", editing.id)
-      : await supabase.from("products").insert(payload);
-    if (error) {
+    const { data, error } = editing.id
+      ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("products").insert(payload).select("id").single();
+    if (error || !data?.id) {
       toast.error("تعذّر الحفظ");
       return;
     }
+    await saveSchedule(data.id);
     toast.success("تم الحفظ");
     setEditing(null);
     refresh();
@@ -136,19 +188,7 @@ export function ProductsManager() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{products.data?.length ?? 0} منتج</span>
-        <Button
-          className="rounded-full"
-          onClick={() =>
-            setEditing({
-              name: "",
-              price: 0,
-              is_available: true,
-              sort_order: 1,
-              description: "",
-              badge: "none",
-            })
-          }
-        >
+        <Button className="rounded-full" onClick={() => openEditor()}>
           <Plus className="size-4" /> منتج جديد
         </Button>
       </div>
@@ -175,6 +215,24 @@ export function ProductsManager() {
                     {PRODUCT_BADGES.find((b) => b.value === product.badge)?.label}
                   </span>
                 )}
+                {productDays(bookingDayRows.data, product.id).length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    أيام الحجز:{" "}
+                    {productDays(bookingDayRows.data, product.id)
+                      .sort((a, b) => a - b)
+                      .map((d) => dayLabel(d))
+                      .join(" ، ")}
+                  </p>
+                )}
+                {productTimeIds(timeRows.data, product.id).length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    أوقات التسليم:{" "}
+                    {productTimeIds(timeRows.data, product.id)
+                      .map((id) => times.data?.find((t) => t.id === id)?.label)
+                      .filter(Boolean)
+                      .join(" ، ")}
+                  </p>
+                )}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
@@ -186,7 +244,7 @@ export function ProductsManager() {
               >
                 {product.is_available ? "تعطيل التوفر" : "تفعيل التوفر"}
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => setEditing(product)}>
+              <Button variant="ghost" size="icon" onClick={() => openEditor(product)}>
                 <Pencil className="size-4" />
               </Button>
               <Button
@@ -320,6 +378,65 @@ export function ProductsManager() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 rounded-xl bg-surface p-3">
+              <Label>أيام الحجز المتاحة لهذا المنتج</Label>
+              <p className="text-xs text-muted-foreground">
+                اتركها فارغة ليكون المنتج متاحاً كل الأيام.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {WEEK_DAYS.map((d) => (
+                  <label
+                    key={d.value}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm"
+                  >
+                    <Checkbox
+                      checked={days.includes(d.value)}
+                      onCheckedChange={(v) =>
+                        setDays((prev) =>
+                          v ? [...prev, d.value] : prev.filter((x) => x !== d.value),
+                        )
+                      }
+                    />
+                    <span>{d.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-xl bg-surface p-3">
+              <Label>أوقات التسليم المتاحة لهذا المنتج</Label>
+              <p className="text-xs text-muted-foreground">
+                اتركها فارغة ليكون المنتج متاحاً في كل الأوقات.
+              </p>
+              {(times.data ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  أضف أوقات التسليم أولاً من تبويب «التسليم».
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {(times.data ?? []).map((t) => (
+                    <label
+                      key={t.id}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm"
+                    >
+                      <Checkbox
+                        checked={timeIds.includes(t.id)}
+                        onCheckedChange={(v) =>
+                          setTimeIds((prev) =>
+                            v ? [...prev, t.id] : prev.filter((x) => x !== t.id),
+                          )
+                        }
+                      />
+                      <span className="flex-1">{t.label}</span>
+                      {!t.is_active && (
+                        <span className="text-xs text-muted-foreground">معطّل</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>الترتيب</Label>

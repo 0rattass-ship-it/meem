@@ -10,11 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  WEEK_DAYS,
-  useBookingDays,
   useDeliveryLocations,
   useDeliveryTimes,
-  type BookingDay,
   type DeliveryLocation,
   type DeliveryTime,
 } from "@/lib/store-data";
@@ -23,14 +20,12 @@ export function DeliverySettingsManager() {
   const qc = useQueryClient();
   const times = useDeliveryTimes(true);
   const locations = useDeliveryLocations(true);
-  const days = useBookingDays(true);
 
   const [editTime, setEditTime] = useState<Partial<DeliveryTime> | null>(null);
   const [editLocation, setEditLocation] = useState<Partial<DeliveryLocation> | null>(null);
 
   const refreshTimes = () => qc.invalidateQueries({ queryKey: ["delivery_times"] });
   const refreshLocations = () => qc.invalidateQueries({ queryKey: ["delivery_locations"] });
-  const refreshDays = () => qc.invalidateQueries({ queryKey: ["booking_days"] });
 
   async function saveTime() {
     const label = editTime?.label?.trim();
@@ -117,17 +112,6 @@ export function DeliverySettingsManager() {
     refreshLocations();
   }
 
-  async function toggleDay(day: number, current: BookingDay | undefined, value: boolean) {
-    const { error } = current
-      ? await supabase.from("booking_days").update({ is_active: value }).eq("id", current.id)
-      : await supabase.from("booking_days").insert({ day_of_week: day, is_active: value });
-    if (error) {
-      toast.error("تعذّر التحديث");
-      return;
-    }
-    refreshDays();
-  }
-
   return (
     <div className="space-y-6">
       <section className="space-y-3">
@@ -175,19 +159,11 @@ export function DeliverySettingsManager() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-bold text-primary">أيام الحجز المتاحة</h2>
-        <ul className="card-soft divide-y divide-border p-2">
-          {WEEK_DAYS.map((d) => {
-            const row = (days.data ?? []).find((x) => x.day_of_week === d.value);
-            const active = row ? row.is_active : false;
-            return (
-              <li key={d.value} className="flex items-center justify-between px-2 py-3">
-                <Label className="text-sm">{d.label}</Label>
-                <Switch checked={active} onCheckedChange={(v) => toggleDay(d.value, row, v)} />
-              </li>
-            );
-          })}
-        </ul>
+        <h2 className="font-bold text-primary">أيام الحجز</h2>
+        <p className="card-soft p-3 text-sm text-muted-foreground">
+          أيام الحجز وأوقات التسليم تُحدَّد لكل منتج على حدة من تبويب «المنتجات» عند إضافة أو تعديل
+          المنتج.
+        </p>
       </section>
 
       <section className="space-y-3">

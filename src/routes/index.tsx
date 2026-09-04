@@ -24,9 +24,13 @@ import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
 
 import {
+  dayLabel,
+  isProductAvailableToday,
+  productDays,
   useAddons,
   useCategories,
   useProductAddons,
+  useProductBookingDays,
   useProducts,
   type Product,
   type ProductBadge,
@@ -55,9 +59,19 @@ function StorePage() {
   const products = useProducts();
   const addons = useAddons();
   const productAddons = useProductAddons();
+  const bookingDays = useProductBookingDays();
   const cart = useCart();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
+
+  const availableToday = (productId: string) =>
+    isProductAvailableToday(bookingDays.data, productId);
+  const daysText = (productId: string) =>
+    productDays(bookingDays.data, productId)
+      .sort((a, b) => a - b)
+      .map((d) => dayLabel(d))
+      .join(" ، ");
+
 
   const visibleCategories = useMemo(() => {
     const list = categories.data ?? [];
@@ -137,6 +151,8 @@ function StorePage() {
                       key={product.id}
                       product={product}
                       hasAddons={addonsForProduct(product.id).length > 0}
+                      bookingAvailable={availableToday(product.id)}
+                      bookingDaysText={daysText(product.id)}
                       onOpen={() => setSelected(product)}
                     />
                   ))}
@@ -167,6 +183,8 @@ function StorePage() {
       <ProductDialog
         product={selected}
         addons={selected ? addonsForProduct(selected.id) : []}
+        bookingAvailable={selected ? availableToday(selected.id) : true}
+        bookingDaysText={selected ? daysText(selected.id) : ""}
         onClose={() => setSelected(null)}
       />
     </div>
@@ -222,10 +240,14 @@ function CategoryChip({
 function ProductCard({
   product,
   hasAddons,
+  bookingAvailable,
+  bookingDaysText,
   onOpen,
 }: {
   product: Product;
   hasAddons: boolean;
+  bookingAvailable: boolean;
+  bookingDaysText: string;
   onOpen: () => void;
 }) {
   const cart = useCart();
@@ -257,6 +279,17 @@ function ProductCard({
         <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
+      ) : !bookingAvailable ? (
+        <div className="mt-3 space-y-1">
+          <p className="rounded-full bg-destructive/10 py-2 text-center text-xs font-bold text-destructive">
+            غير متوفر الحجز اليوم
+          </p>
+          {bookingDaysText && (
+            <p className="text-center text-[11px] text-muted-foreground">
+              أيام الحجز: {bookingDaysText}
+            </p>
+          )}
+        </div>
       ) : (
         <div className="mt-3">
           <Button onClick={onOpen} className="w-full rounded-full" size="sm">
@@ -273,10 +306,14 @@ function ProductCard({
 function ProductDialog({
   product,
   addons,
+  bookingAvailable,
+  bookingDaysText,
   onClose,
 }: {
   product: Product | null;
   addons: CartAddon[];
+  bookingAvailable: boolean;
+  bookingDaysText: string;
   onClose: () => void;
 }) {
   const cart = useCart();
@@ -310,6 +347,17 @@ function ProductDialog({
           className="h-40 w-full rounded-2xl object-cover"
         />
         <ProductBadgeTag badge={product.badge} />
+
+        {!bookingAvailable && (
+          <div className="rounded-2xl bg-destructive/10 p-3 text-center">
+            <p className="font-bold text-destructive">غير متوفر الحجز اليوم</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              هذا المنتج غير متاح للحجز اليوم، يرجى العودة في يوم الحجز المتاح
+              {bookingDaysText ? `: ${bookingDaysText}` : ""}.
+            </p>
+          </div>
+        )}
+
 
 
         {addons.length > 0 && (
@@ -360,6 +408,7 @@ function ProductDialog({
         <Button
           size="lg"
           className="w-full rounded-full"
+          disabled={!bookingAvailable}
           onClick={() => {
             cart.addItem({
               productId: product.id,
