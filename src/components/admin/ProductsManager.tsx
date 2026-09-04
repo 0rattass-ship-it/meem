@@ -215,6 +215,24 @@ export function ProductsManager() {
                     {PRODUCT_BADGES.find((b) => b.value === product.badge)?.label}
                   </span>
                 )}
+                {productDays(bookingDayRows.data, product.id).length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    أيام الحجز:{" "}
+                    {productDays(bookingDayRows.data, product.id)
+                      .sort((a, b) => a - b)
+                      .map((d) => dayLabel(d))
+                      .join(" ، ")}
+                  </p>
+                )}
+                {productTimeIds(timeRows.data, product.id).length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    أوقات التسليم:{" "}
+                    {productTimeIds(timeRows.data, product.id)
+                      .map((id) => times.data?.find((t) => t.id === id)?.label)
+                      .filter(Boolean)
+                      .join(" ، ")}
+                  </p>
+                )}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
