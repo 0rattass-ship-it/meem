@@ -306,10 +306,14 @@ function ProductCard({
 function ProductDialog({
   product,
   addons,
+  bookingAvailable,
+  bookingDaysText,
   onClose,
 }: {
   product: Product | null;
   addons: CartAddon[];
+  bookingAvailable: boolean;
+  bookingDaysText: string;
   onClose: () => void;
 }) {
   const cart = useCart();
