@@ -146,13 +146,14 @@ export function ProductsManager() {
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
     };
-    const { error } = editing.id
-      ? await supabase.from("products").update(payload).eq("id", editing.id)
-      : await supabase.from("products").insert(payload);
-    if (error) {
+    const { data, error } = editing.id
+      ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("products").insert(payload).select("id").single();
+    if (error || !data?.id) {
       toast.error("تعذّر الحفظ");
       return;
     }
+    await saveSchedule(data.id);
     toast.success("تم الحفظ");
     setEditing(null);
     refresh();
