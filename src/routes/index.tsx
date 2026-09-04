@@ -59,9 +59,19 @@ function StorePage() {
   const products = useProducts();
   const addons = useAddons();
   const productAddons = useProductAddons();
+  const bookingDays = useProductBookingDays();
   const cart = useCart();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
+
+  const availableToday = (productId: string) =>
+    isProductAvailableToday(bookingDays.data, productId);
+  const daysText = (productId: string) =>
+    productDays(bookingDays.data, productId)
+      .sort((a, b) => a - b)
+      .map((d) => dayLabel(d))
+      .join(" ، ");
+
 
   const visibleCategories = useMemo(() => {
     const list = categories.data ?? [];
