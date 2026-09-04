@@ -10,11 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  WEEK_DAYS,
-  useBookingDays,
   useDeliveryLocations,
   useDeliveryTimes,
-  type BookingDay,
   type DeliveryLocation,
   type DeliveryTime,
 } from "@/lib/store-data";
@@ -23,14 +20,12 @@ export function DeliverySettingsManager() {
   const qc = useQueryClient();
   const times = useDeliveryTimes(true);
   const locations = useDeliveryLocations(true);
-  const days = useBookingDays(true);
 
   const [editTime, setEditTime] = useState<Partial<DeliveryTime> | null>(null);
   const [editLocation, setEditLocation] = useState<Partial<DeliveryLocation> | null>(null);
 
   const refreshTimes = () => qc.invalidateQueries({ queryKey: ["delivery_times"] });
   const refreshLocations = () => qc.invalidateQueries({ queryKey: ["delivery_locations"] });
-  const refreshDays = () => qc.invalidateQueries({ queryKey: ["booking_days"] });
 
   async function saveTime() {
     const label = editTime?.label?.trim();
@@ -115,17 +110,6 @@ export function DeliverySettingsManager() {
       return;
     }
     refreshLocations();
-  }
-
-  async function toggleDay(day: number, current: BookingDay | undefined, value: boolean) {
-    const { error } = current
-      ? await supabase.from("booking_days").update({ is_active: value }).eq("id", current.id)
-      : await supabase.from("booking_days").insert({ day_of_week: day, is_active: value });
-    if (error) {
-      toast.error("تعذّر التحديث");
-      return;
-    }
-    refreshDays();
   }
 
   return (
