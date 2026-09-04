@@ -361,6 +361,65 @@ export function ProductsManager() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2 rounded-xl bg-surface p-3">
+              <Label>أيام الحجز المتاحة لهذا المنتج</Label>
+              <p className="text-xs text-muted-foreground">
+                اتركها فارغة ليكون المنتج متاحاً كل الأيام.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {WEEK_DAYS.map((d) => (
+                  <label
+                    key={d.value}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm"
+                  >
+                    <Checkbox
+                      checked={days.includes(d.value)}
+                      onCheckedChange={(v) =>
+                        setDays((prev) =>
+                          v ? [...prev, d.value] : prev.filter((x) => x !== d.value),
+                        )
+                      }
+                    />
+                    <span>{d.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-xl bg-surface p-3">
+              <Label>أوقات التسليم المتاحة لهذا المنتج</Label>
+              <p className="text-xs text-muted-foreground">
+                اتركها فارغة ليكون المنتج متاحاً في كل الأوقات.
+              </p>
+              {(times.data ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  أضف أوقات التسليم أولاً من تبويب «التسليم».
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {(times.data ?? []).map((t) => (
+                    <label
+                      key={t.id}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm"
+                    >
+                      <Checkbox
+                        checked={timeIds.includes(t.id)}
+                        onCheckedChange={(v) =>
+                          setTimeIds((prev) =>
+                            v ? [...prev, t.id] : prev.filter((x) => x !== t.id),
+                          )
+                        }
+                      />
+                      <span className="flex-1">{t.label}</span>
+                      {!t.is_active && (
+                        <span className="text-xs text-muted-foreground">معطّل</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
