@@ -118,6 +118,10 @@ function CheckoutPage() {
       toast.error("السلة فارغة");
       return;
     }
+    if (conflict) {
+      toast.error("لا يوجد يوم أو وقت مشترك بين منتجات السلة، اطلبها في طلبات منفصلة");
+      return;
+    }
     if (timeOptions.length > 0 && !deliveryTimeId) {
       toast.error("اختر وقت التسليم");
       return;
