@@ -24,9 +24,13 @@ import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
 
 import {
+  dayLabel,
+  isProductAvailableToday,
+  productDays,
   useAddons,
   useCategories,
   useProductAddons,
+  useProductBookingDays,
   useProducts,
   type Product,
   type ProductBadge,
