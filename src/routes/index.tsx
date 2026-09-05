@@ -336,13 +336,15 @@ function ProductDialog({
 
         {!bookingAvailable && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-center">
-            <p className="font-bold text-destructive">غير متوفر الحجز اليوم</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              هذا المنتج غير متاح للحجز اليوم، يرجى العودة في يوم الحجز المتاح
-              {bookingDaysText ? `: ${bookingDaysText}` : ""}.
-            </p>
+            <p className="font-bold text-destructive">غير متاح للحجز اليوم</p>
+            {bookingDaysText && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                أيام الحجز المتاحة: {bookingDaysText}
+              </p>
+            )}
           </div>
         )}
+
 
 
 
