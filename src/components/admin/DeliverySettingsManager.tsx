@@ -146,8 +146,13 @@ export function DeliverySettingsManager() {
               <div className="flex-1">
                 <p className="font-semibold">{item.label}</p>
                 <p className="text-xs text-muted-foreground">
+                  {item.day_of_week === null || item.day_of_week === undefined
+                    ? "كل الأيام"
+                    : `يوم ${dayLabel(item.day_of_week)}`}
+                  {" — "}
                   {item.is_active ? "يظهر للعميل" : "مخفي"}
                 </p>
+
               </div>
               <Switch checked={item.is_active} onCheckedChange={() => toggleTime(item)} />
               <Button variant="ghost" size="icon" onClick={() => setEditTime(item)}>
