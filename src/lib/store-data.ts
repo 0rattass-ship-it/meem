@@ -90,9 +90,11 @@ export function useProductAddons() {
 export type DeliveryTime = {
   id: string;
   label: string;
+  day_of_week: number | null;
   sort_order: number;
   is_active: boolean;
 };
+
 
 export type DeliveryLocation = {
   id: string;
