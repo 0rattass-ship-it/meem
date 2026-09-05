@@ -153,7 +153,6 @@ function StorePage() {
                       hasAddons={addonsForProduct(product.id).length > 0}
                       onOpen={() => setSelected(product)}
 
-                      onOpen={() => setSelected(product)}
                     />
                   ))}
                 </div>
