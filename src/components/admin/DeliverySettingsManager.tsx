@@ -35,7 +35,12 @@ export function DeliverySettingsManager() {
     }
     const payload = {
       label,
+      day_of_week:
+        editTime?.day_of_week === null || editTime?.day_of_week === undefined
+          ? null
+          : Number(editTime.day_of_week),
       sort_order: Number(editTime?.sort_order ?? 0),
+
       is_active: editTime?.is_active ?? true,
     };
     const { error } = editTime?.id
