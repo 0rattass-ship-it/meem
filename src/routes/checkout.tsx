@@ -297,12 +297,14 @@ function CheckoutPage() {
         </section>
 
         <section className="card-soft space-y-4 p-4">
-          <h2 className="font-bold text-foreground">التسليم والحجز</h2>
+          <h2 className="font-bold text-foreground">التسليم</h2>
 
           {conflict && (
             <div className="rounded-2xl bg-destructive/10 p-3 text-sm">
               <p className="font-bold text-destructive">
-                منتجات السلة لا تشترك في نفس أيام أو أوقات الحجز
+                {unavailableToday.length > 0
+                  ? "بعض منتجات السلة غير متاحة للحجز اليوم"
+                  : "منتجات السلة لا تشترك في نفس أوقات التسليم"}
               </p>
               <p className="mt-1 text-muted-foreground">
                 يرجى إرسال هذه المنتجات في طلبات منفصلة، أو إزالة أحدها لإكمال الطلب.
@@ -310,36 +312,18 @@ function CheckoutPage() {
             </div>
           )}
 
-          {(hasDayRestriction || hasTimeRestriction) && !conflict && (
+          {hasTimeRestriction && !conflict && (
             <p className="text-xs text-muted-foreground">
-              تظهر لك فقط الأيام والأوقات المتاحة لجميع منتجات سلتك.
+              تظهر لك فقط أيام وأوقات التسليم المتاحة لجميع منتجات سلتك.
             </p>
-          )}
-
-          {timeOptions.length > 0 && (
-            <div className="space-y-2">
-              <Label>وقت التسليم</Label>
-              <Select value={deliveryTimeId} onValueChange={setDeliveryTimeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر وقت التسليم" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeOptions.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           )}
 
           {dayOptions.length > 0 && (
             <div className="space-y-2">
-              <Label>يوم الحجز</Label>
+              <Label>يوم التسليم</Label>
               <Select value={bookingDay} onValueChange={setBookingDay}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر اليوم" />
+                  <SelectValue placeholder="اختر يوم التسليم" />
                 </SelectTrigger>
                 <SelectContent>
                   {dayOptions.map((d) => (
@@ -351,6 +335,31 @@ function CheckoutPage() {
               </Select>
             </div>
           )}
+
+          {bookingDay !== "" && (
+            <div className="space-y-2">
+              <Label>وقت التسليم</Label>
+              {dayTimeOptions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  لا توجد أوقات تسليم في هذا اليوم، اختر يوماً آخر.
+                </p>
+              ) : (
+                <Select value={deliveryTimeId} onValueChange={setDeliveryTimeId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر وقت التسليم" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dayTimeOptions.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
 
           {locationOptions.length > 0 && (
             <div className="space-y-2">
