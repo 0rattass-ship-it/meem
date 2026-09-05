@@ -18,15 +18,17 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
 import {
-  WEEK_DAYS,
   dayLabel,
-  productDays,
+  deliveryDaysFromTimes,
+  isProductAvailableToday,
   productTimeIds,
+  timesForDay,
   useDeliveryLocations,
   useDeliveryTimes,
   useProductBookingDays,
   useProductDeliveryTimes,
 } from "@/lib/store-data";
+
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
