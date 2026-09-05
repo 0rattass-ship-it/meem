@@ -68,16 +68,7 @@ function CheckoutPage() {
     [cart.items],
   );
 
-  // الأيام والأوقات المشتركة بين جميع منتجات السلة فقط
-  const dayOptions = useMemo(() => {
-    let allowed = WEEK_DAYS.map((d) => d.value as number);
-    for (const id of productIds) {
-      const own = productDays(productBookingDays.data, id);
-      if (own.length > 0) allowed = allowed.filter((d) => own.includes(d));
-    }
-    return allowed.sort((a, b) => a - b);
-  }, [productIds, productBookingDays.data]);
-
+  // أوقات التسليم المشتركة بين جميع منتجات السلة
   const timeOptions = useMemo(() => {
     let allowed = times.data ?? [];
     for (const id of productIds) {
@@ -87,25 +78,36 @@ function CheckoutPage() {
     return allowed;
   }, [productIds, productTimes.data, times.data]);
 
-  const hasDayRestriction = productIds.some(
-    (id) => productDays(productBookingDays.data, id).length > 0,
+  // أيام التسليم المتاحة تُستخرج من أوقات التسليم المتاحة
+  const dayOptions = useMemo(() => deliveryDaysFromTimes(timeOptions), [timeOptions]);
+
+  const dayTimeOptions = useMemo(
+    () => (bookingDay === "" ? [] : timesForDay(timeOptions, Number(bookingDay))),
+    [timeOptions, bookingDay],
   );
+
   const hasTimeRestriction = productIds.some(
     (id) => productTimeIds(productTimes.data, id).length > 0,
   );
+
+  // منتج غير متاح للحجز اليوم
+  const unavailableToday = useMemo(
+    () => productIds.filter((id) => !isProductAvailableToday(productBookingDays.data, id)),
+    [productIds, productBookingDays.data],
+  );
+
   const conflict =
     cart.items.length > 0 &&
-    ((hasDayRestriction && dayOptions.length === 0) ||
-      (hasTimeRestriction && timeOptions.length === 0));
+    ((hasTimeRestriction && timeOptions.length === 0) || unavailableToday.length > 0);
 
   useEffect(() => {
     if (bookingDay !== "" && !dayOptions.includes(Number(bookingDay))) setBookingDay("");
   }, [dayOptions, bookingDay]);
 
   useEffect(() => {
-    if (deliveryTimeId && !timeOptions.some((t) => t.id === deliveryTimeId))
+    if (deliveryTimeId && !dayTimeOptions.some((t) => t.id === deliveryTimeId))
       setDeliveryTimeId("");
-  }, [timeOptions, deliveryTimeId]);
+  }, [dayTimeOptions, deliveryTimeId]);
 
 
   async function submit() {
@@ -119,21 +121,22 @@ function CheckoutPage() {
       return;
     }
     if (conflict) {
-      toast.error("لا يوجد يوم أو وقت مشترك بين منتجات السلة، اطلبها في طلبات منفصلة");
-      return;
-    }
-    if (timeOptions.length > 0 && !deliveryTimeId) {
-      toast.error("اختر وقت التسليم");
+      toast.error("بعض منتجات السلة غير متاحة اليوم أو لا تشترك في نفس أوقات التسليم");
       return;
     }
     if (dayOptions.length > 0 && !bookingDay) {
-      toast.error("اختر يوم الحجز");
+      toast.error("اختر يوم التسليم");
+      return;
+    }
+    if (dayTimeOptions.length > 0 && !deliveryTimeId) {
+      toast.error("اختر وقت التسليم");
       return;
     }
     if (locationOptions.length > 0 && !locationId) {
       toast.error("اختر مكان التسليم");
       return;
     }
+
     setSending(true);
     const { data, error } = await supabase.rpc("place_order", {
       _customer_name: parsed.data.customer_name,
