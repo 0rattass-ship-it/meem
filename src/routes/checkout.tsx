@@ -145,16 +145,16 @@ function CheckoutPage() {
       _customer_phone: parsed.data.customer_phone,
       _address: parsed.data.address ?? "",
       _notes: parsed.data.notes ?? "",
-      _delivery_time_id: deliveryTimeId || undefined,
-      _delivery_location_id: locationId || undefined,
-      _booking_day: bookingDay === "" ? undefined : Number(bookingDay),
-
+      ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
+      ...(locationId ? { _delivery_location_id: locationId } : {}),
+      ...(bookingDay === "" ? {} : { _booking_day: Number(bookingDay) }),
       _items: cart.items.map((item) => ({
         product_id: item.productId,
         quantity: item.quantity,
         addon_ids: item.addons.map((a) => a.id),
       })),
     });
+
     setSending(false);
 
     if (error || typeof data !== "number") {
