@@ -230,11 +230,40 @@ export function DeliverySettingsManager() {
             <div className="space-y-2">
               <Label>الوقت كما يظهر للعميل</Label>
               <Input
-                placeholder="مثال: 5:00 مساءً يوم الاثنين"
+                placeholder="مثال: 5:00 مساءً"
                 value={editTime?.label ?? ""}
                 onChange={(e) => setEditTime({ ...editTime, label: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label>يوم التسليم</Label>
+              <Select
+                value={
+                  editTime?.day_of_week === null || editTime?.day_of_week === undefined
+                    ? "all"
+                    : String(editTime.day_of_week)
+                }
+                onValueChange={(v) =>
+                  setEditTime({ ...editTime, day_of_week: v === "all" ? null : Number(v) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختاري اليوم" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الأيام</SelectItem>
+                  {WEEK_DAYS.map((d) => (
+                    <SelectItem key={d.value} value={String(d.value)}>
+                      {d.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                يظهر هذا الوقت للعميل بعد اختياره ليوم التسليم.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
