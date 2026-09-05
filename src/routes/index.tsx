@@ -279,18 +279,8 @@ function ProductCard({
         <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
-      ) : !bookingAvailable ? (
-        <div className="mt-3 space-y-1">
-          <p className="rounded-full bg-destructive/10 py-2 text-center text-xs font-bold text-destructive">
-            غير متوفر الحجز اليوم
-          </p>
-          {bookingDaysText && (
-            <p className="text-center text-[11px] text-muted-foreground">
-              أيام الحجز: {bookingDaysText}
-            </p>
-          )}
-        </div>
       ) : (
+
         <div className="mt-3">
           <Button onClick={onOpen} className="w-full rounded-full" size="sm">
             <Plus className="size-4" />
