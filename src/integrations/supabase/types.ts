@@ -125,6 +125,7 @@ export type Database = {
       delivery_times: {
         Row: {
           created_at: string
+          day_of_week: number | null
           id: string
           is_active: boolean
           label: string
@@ -133,6 +134,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          day_of_week?: number | null
           id?: string
           is_active?: boolean
           label: string
@@ -141,6 +143,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          day_of_week?: number | null
           id?: string
           is_active?: boolean
           label?: string
