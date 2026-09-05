@@ -435,30 +435,19 @@ export type Database = {
         }
         Returns: boolean
       }
-      place_order:
-        | {
-            Args: {
-              _address: string
-              _customer_name: string
-              _customer_phone: string
-              _items: Json
-              _notes: string
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              _address: string
-              _booking_day?: number
-              _customer_name: string
-              _customer_phone: string
-              _delivery_location_id?: string
-              _delivery_time_id?: string
-              _items: Json
-              _notes: string
-            }
-            Returns: number
-          }
+      place_order: {
+        Args: {
+          _address: string
+          _booking_day?: number
+          _customer_name: string
+          _customer_phone: string
+          _delivery_location_id?: string
+          _delivery_time_id?: string
+          _items: Json
+          _notes: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin"
