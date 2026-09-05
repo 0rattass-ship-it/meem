@@ -151,9 +151,8 @@ function StorePage() {
                       key={product.id}
                       product={product}
                       hasAddons={addonsForProduct(product.id).length > 0}
-                      bookingAvailable={availableToday(product.id)}
-                      bookingDaysText={daysText(product.id)}
                       onOpen={() => setSelected(product)}
+
                     />
                   ))}
                 </div>
@@ -240,16 +239,13 @@ function CategoryChip({
 function ProductCard({
   product,
   hasAddons,
-  bookingAvailable,
-  bookingDaysText,
   onOpen,
 }: {
   product: Product;
   hasAddons: boolean;
-  bookingAvailable: boolean;
-  bookingDaysText: string;
   onOpen: () => void;
 }) {
+
   const cart = useCart();
   const inCart = cart.items
     .filter((i) => i.productId === product.id)
@@ -279,18 +275,8 @@ function ProductCard({
         <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
-      ) : !bookingAvailable ? (
-        <div className="mt-3 space-y-1">
-          <p className="rounded-full bg-destructive/10 py-2 text-center text-xs font-bold text-destructive">
-            غير متوفر الحجز اليوم
-          </p>
-          {bookingDaysText && (
-            <p className="text-center text-[11px] text-muted-foreground">
-              أيام الحجز: {bookingDaysText}
-            </p>
-          )}
-        </div>
       ) : (
+
         <div className="mt-3">
           <Button onClick={onOpen} className="w-full rounded-full" size="sm">
             <Plus className="size-4" />
@@ -350,13 +336,15 @@ function ProductDialog({
 
         {!bookingAvailable && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-center">
-            <p className="font-bold text-destructive">غير متوفر الحجز اليوم</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              هذا المنتج غير متاح للحجز اليوم، يرجى العودة في يوم الحجز المتاح
-              {bookingDaysText ? `: ${bookingDaysText}` : ""}.
-            </p>
+            <p className="font-bold text-destructive">غير متاح للحجز اليوم</p>
+            {bookingDaysText && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                أيام الحجز المتاحة: {bookingDaysText}
+              </p>
+            )}
           </div>
         )}
+
 
 
 

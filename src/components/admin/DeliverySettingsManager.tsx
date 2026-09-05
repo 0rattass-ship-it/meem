@@ -8,13 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  WEEK_DAYS,
+  dayLabel,
   useDeliveryLocations,
   useDeliveryTimes,
   type DeliveryLocation,
   type DeliveryTime,
 } from "@/lib/store-data";
+
 
 export function DeliverySettingsManager() {
   const qc = useQueryClient();
@@ -35,7 +45,12 @@ export function DeliverySettingsManager() {
     }
     const payload = {
       label,
+      day_of_week:
+        editTime?.day_of_week === null || editTime?.day_of_week === undefined
+          ? null
+          : Number(editTime.day_of_week),
       sort_order: Number(editTime?.sort_order ?? 0),
+
       is_active: editTime?.is_active ?? true,
     };
     const { error } = editTime?.id
@@ -122,7 +137,10 @@ export function DeliverySettingsManager() {
           <Button
             size="sm"
             className="rounded-full"
-            onClick={() => setEditTime({ label: "", sort_order: 0, is_active: true })}
+            onClick={() =>
+              setEditTime({ label: "", day_of_week: null, sort_order: 0, is_active: true })
+            }
+
           >
             <Plus className="size-4" /> وقت جديد
           </Button>
@@ -138,8 +156,13 @@ export function DeliverySettingsManager() {
               <div className="flex-1">
                 <p className="font-semibold">{item.label}</p>
                 <p className="text-xs text-muted-foreground">
+                  {item.day_of_week === null || item.day_of_week === undefined
+                    ? "كل الأيام"
+                    : `يوم ${dayLabel(item.day_of_week)}`}
+                  {" — "}
                   {item.is_active ? "يظهر للعميل" : "مخفي"}
                 </p>
+
               </div>
               <Switch checked={item.is_active} onCheckedChange={() => toggleTime(item)} />
               <Button variant="ghost" size="icon" onClick={() => setEditTime(item)}>
@@ -217,11 +240,40 @@ export function DeliverySettingsManager() {
             <div className="space-y-2">
               <Label>الوقت كما يظهر للعميل</Label>
               <Input
-                placeholder="مثال: 5:00 مساءً يوم الاثنين"
+                placeholder="مثال: 5:00 مساءً"
                 value={editTime?.label ?? ""}
                 onChange={(e) => setEditTime({ ...editTime, label: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label>يوم التسليم</Label>
+              <Select
+                value={
+                  editTime?.day_of_week === null || editTime?.day_of_week === undefined
+                    ? "all"
+                    : String(editTime.day_of_week)
+                }
+                onValueChange={(v) =>
+                  setEditTime({ ...editTime, day_of_week: v === "all" ? null : Number(v) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختاري اليوم" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الأيام</SelectItem>
+                  {WEEK_DAYS.map((d) => (
+                    <SelectItem key={d.value} value={String(d.value)}>
+                      {d.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                يظهر هذا الوقت للعميل بعد اختياره ليوم التسليم.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>الترتيب</Label>
               <Input
