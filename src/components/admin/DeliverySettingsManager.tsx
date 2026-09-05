@@ -127,7 +127,10 @@ export function DeliverySettingsManager() {
           <Button
             size="sm"
             className="rounded-full"
-            onClick={() => setEditTime({ label: "", sort_order: 0, is_active: true })}
+            onClick={() =>
+              setEditTime({ label: "", day_of_week: null, sort_order: 0, is_active: true })
+            }
+
           >
             <Plus className="size-4" /> وقت جديد
           </Button>
