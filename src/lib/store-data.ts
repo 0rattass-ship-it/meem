@@ -133,6 +133,26 @@ export function useDeliveryTimes(includeInactive = false) {
   });
 }
 
+/** أيام التسليم المستخرجة من أوقات التسليم (الوقت بدون يوم يعني كل الأيام) */
+export function deliveryDaysFromTimes(times: DeliveryTime[] | undefined) {
+  const days = new Set<number>();
+  let hasAnyDay = false;
+  for (const t of times ?? []) {
+    if (t.day_of_week === null || t.day_of_week === undefined) hasAnyDay = true;
+    else days.add(t.day_of_week);
+  }
+  if (hasAnyDay) for (const d of WEEK_DAYS) days.add(d.value);
+  return Array.from(days).sort((a, b) => a - b);
+}
+
+/** أوقات التسليم المتاحة في يوم معيّن */
+export function timesForDay(times: DeliveryTime[] | undefined, day: number | null) {
+  if (day === null) return times ?? [];
+  return (times ?? []).filter((t) => t.day_of_week === null || t.day_of_week === day);
+}
+
+
+
 export function useDeliveryLocations(includeInactive = false) {
   return useQuery({
     queryKey: ["delivery_locations", includeInactive],
