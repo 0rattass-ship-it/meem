@@ -240,16 +240,13 @@ function CategoryChip({
 function ProductCard({
   product,
   hasAddons,
-  bookingAvailable,
-  bookingDaysText,
   onOpen,
 }: {
   product: Product;
   hasAddons: boolean;
-  bookingAvailable: boolean;
-  bookingDaysText: string;
   onOpen: () => void;
 }) {
+
   const cart = useCart();
   const inCart = cart.items
     .filter((i) => i.productId === product.id)
