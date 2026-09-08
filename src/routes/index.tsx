@@ -107,6 +107,7 @@ function StorePage() {
             <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
             <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
           </div>
+          <InstallAppButton />
         </div>
       </header>
 
