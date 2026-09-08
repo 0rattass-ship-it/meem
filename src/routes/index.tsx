@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 import {
   dayLabel,
@@ -107,6 +108,7 @@ function StorePage() {
             <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
             <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
           </div>
+          <InstallAppButton />
         </div>
       </header>
 
