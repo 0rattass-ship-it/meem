@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 import {
   dayLabel,
