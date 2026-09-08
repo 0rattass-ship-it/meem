@@ -23,6 +23,7 @@ import {
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { AppSplashScreen } from "@/components/AppSplashScreen";
 
 import {
   dayLabel,
@@ -99,6 +100,7 @@ function StorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
+      <AppSplashScreen />
       <header className="border-b border-border bg-card/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
           <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">

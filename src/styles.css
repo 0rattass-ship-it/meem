@@ -108,3 +108,148 @@
   box-shadow: var(--shadow-soft);
   border: 1px solid var(--color-border);
 }
+
+@keyframes splash-mark-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes splash-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splash-rule-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 0.55;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes splash-glow-drift {
+  0%, 100% { transform: translate3d(-3%, -2%, 0) scale(1); }
+  50% { transform: translate3d(3%, 2%, 0) scale(1.04); }
+}
+
+.meem-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  background: var(--color-background);
+  color: var(--color-primary);
+  opacity: 1;
+  transition: opacity 650ms cubic-bezier(0.4, 0, 0.2, 1), visibility 650ms;
+}
+
+.meem-splash--leaving {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.meem-splash__glow {
+  position: absolute;
+  inset: -18%;
+  background: radial-gradient(circle at 50% 46%, var(--color-card) 0%, transparent 48%);
+  opacity: 0.75;
+  animation: splash-glow-drift 6s ease-in-out infinite;
+}
+
+.meem-splash__content {
+  position: relative;
+  display: flex;
+  width: min(86vw, 24rem);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.meem-splash__mark {
+  opacity: 0;
+  filter: drop-shadow(var(--shadow-soft));
+  animation: splash-mark-in 800ms cubic-bezier(0.22, 1, 0.36, 1) 120ms forwards;
+}
+
+.meem-splash__logo {
+  display: block;
+  width: clamp(5.5rem, 25vw, 7rem);
+  height: auto;
+  border-radius: 1.5rem;
+}
+
+.meem-splash__brand {
+  margin-top: 1.5rem;
+  font-size: clamp(1.25rem, 6vw, 1.65rem);
+  font-weight: 700;
+  opacity: 0;
+  animation: splash-text-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 600ms forwards;
+}
+
+.meem-splash__brand span:first-child {
+  color: var(--color-brand-soft);
+  font-weight: 300;
+}
+
+.meem-splash__rule {
+  width: 2.75rem;
+  height: 1px;
+  margin-block: 1.1rem 1.25rem;
+  background: var(--color-brand-soft);
+  opacity: 0;
+  transform-origin: center;
+  animation: splash-rule-in 700ms ease 950ms forwards;
+}
+
+.meem-splash__welcome {
+  opacity: 0;
+  animation: splash-text-in 750ms cubic-bezier(0.22, 1, 0.36, 1) 1120ms forwards;
+}
+
+.meem-splash__welcome h1 {
+  font-family: "Aref Ruqaa", "Cairo", serif;
+  font-size: clamp(1.8rem, 8vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.meem-splash__welcome p {
+  margin-top: 0.35rem;
+  color: var(--color-muted-foreground);
+  font-size: clamp(0.7rem, 3.2vw, 0.85rem);
+  font-weight: 300;
+  letter-spacing: 0.18em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meem-splash__glow {
+    animation: none;
+  }
+
+  .meem-splash__mark,
+  .meem-splash__brand,
+  .meem-splash__rule,
+  .meem-splash__welcome {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
