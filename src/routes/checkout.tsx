@@ -140,7 +140,7 @@ function CheckoutPage() {
       _notes: parsed.data.notes ?? "",
       ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
       ...(locationId ? { _delivery_location_id: locationId } : {}),
-      ...(bookingDay === "" ? {} : { _booking_day: Number(bookingDay) }),
+      ...(autoDay === null ? {} : { _booking_day: autoDay }),
       _items: cart.items.map((item) => ({
         product_id: item.productId,
         quantity: item.quantity,
