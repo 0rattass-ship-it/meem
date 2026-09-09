@@ -120,11 +120,7 @@ function CheckoutPage() {
       return;
     }
     if (conflict) {
-      toast.error("بعض منتجات السلة غير متاحة اليوم أو لا تشترك في نفس أوقات التسليم");
-      return;
-    }
-    if (dayOptions.length > 0 && !bookingDay) {
-      toast.error("اختر يوم التسليم");
+      toast.error("لا يوجد يوم تسليم مشترك بين منتجات السلة");
       return;
     }
     if (dayTimeOptions.length > 0 && !deliveryTimeId) {
