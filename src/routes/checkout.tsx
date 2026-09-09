@@ -56,7 +56,6 @@ function CheckoutPage() {
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", notes: "" });
   const [deliveryTimeId, setDeliveryTimeId] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [bookingDay, setBookingDay] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState<number | null>(null);
 
