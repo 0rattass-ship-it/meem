@@ -73,6 +73,7 @@ export function ProductsManager() {
         sort_order: 1,
         description: "",
         badge: "none",
+        addons_required: false,
       });
       setDays([]);
       setTimeIds([]);
@@ -145,6 +146,7 @@ export function ProductsManager() {
       is_available: editing.is_available ?? true,
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
+      addons_required: editing.addons_required ?? false,
     };
     const { data, error } = editing.id
       ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
