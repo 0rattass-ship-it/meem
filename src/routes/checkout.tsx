@@ -81,30 +81,27 @@ function CheckoutPage() {
   }, [productIds, productTimes.data, times.data]);
 
   // أيام التسليم المتاحة تُستخرج من أوقات التسليم المتاحة
-  const dayOptions = useMemo(() => deliveryDaysFromTimes(timeOptions), [timeOptions]);
+  const deliveryDays = useMemo(() => deliveryDaysFromTimes(timeOptions), [timeOptions]);
+
+  // الأيام المسموحة لجميع منتجات السلة (تقاطع أيام الحجز مع أيام التسليم)
+  const candidateDays = useMemo(() => {
+    const booking = commonBookingDays(productBookingDays.data, productIds);
+    return deliveryDays.filter((d) => booking.includes(d));
+  }, [deliveryDays, productBookingDays.data, productIds]);
+
+  // أقرب يوم قادم مشترك (يُحدد تلقائياً)
+  const autoDay = useMemo(() => nearestCommonDay(candidateDays), [candidateDays]);
 
   const dayTimeOptions = useMemo(
-    () => (bookingDay === "" ? [] : timesForDay(timeOptions, Number(bookingDay))),
-    [timeOptions, bookingDay],
+    () => (autoDay === null ? [] : timesForDay(timeOptions, autoDay)),
+    [timeOptions, autoDay],
   );
 
   const hasTimeRestriction = productIds.some(
     (id) => productTimeIds(productTimes.data, id).length > 0,
   );
 
-  // منتج غير متاح للحجز اليوم
-  const unavailableToday = useMemo(
-    () => productIds.filter((id) => !isProductAvailableToday(productBookingDays.data, id)),
-    [productIds, productBookingDays.data],
-  );
-
-  const conflict =
-    cart.items.length > 0 &&
-    ((hasTimeRestriction && timeOptions.length === 0) || unavailableToday.length > 0);
-
-  useEffect(() => {
-    if (bookingDay !== "" && !dayOptions.includes(Number(bookingDay))) setBookingDay("");
-  }, [dayOptions, bookingDay]);
+  const conflict = cart.items.length > 0 && autoDay === null;
 
   useEffect(() => {
     if (deliveryTimeId && !dayTimeOptions.some((t) => t.id === deliveryTimeId))
