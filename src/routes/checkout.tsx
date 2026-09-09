@@ -358,7 +358,7 @@ function CheckoutPage() {
             </div>
           )}
 
-          {timeOptions.length === 0 && dayOptions.length === 0 && locationOptions.length === 0 && (
+          {timeOptions.length === 0 && locationOptions.length === 0 && (
             <p className="text-sm text-muted-foreground">لا توجد خيارات تسليم متاحة حالياً.</p>
           )}
 
