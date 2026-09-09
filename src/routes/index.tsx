@@ -352,7 +352,14 @@ function ProductDialog({
 
         {addons.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-foreground">الإضافات</p>
+            <p className="font-semibold text-foreground">
+              الإضافات
+              {product.addons_required && (
+                <span className="ms-2 text-xs font-bold text-destructive">
+                  (اختر إضافة واحدة على الأقل)
+                </span>
+              )}
+            </p>
             {addons.map((addon) => (
               <label
                 key={addon.id}
