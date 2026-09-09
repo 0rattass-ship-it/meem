@@ -405,8 +405,15 @@ function ProductDialog({
         <Button
           size="lg"
           className="w-full rounded-full"
-          disabled={!bookingAvailable}
+          disabled={
+            !bookingAvailable ||
+            (product.addons_required && addons.length > 0 && chosenAddons.length === 0)
+          }
           onClick={() => {
+            if (product.addons_required && addons.length > 0 && chosenAddons.length === 0) {
+              toast.error("اختر إضافة واحدة على الأقل");
+              return;
+            }
             cart.addItem({
               productId: product.id,
               name: product.name,
