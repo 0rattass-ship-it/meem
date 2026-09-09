@@ -18,9 +18,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
 import {
+  commonBookingDays,
   dayLabel,
   deliveryDaysFromTimes,
-  isProductAvailableToday,
+  nearestCommonDay,
   productTimeIds,
   timesForDay,
   useDeliveryLocations,
@@ -55,7 +56,6 @@ function CheckoutPage() {
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", notes: "" });
   const [deliveryTimeId, setDeliveryTimeId] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [bookingDay, setBookingDay] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState<number | null>(null);
 
@@ -81,30 +81,27 @@ function CheckoutPage() {
   }, [productIds, productTimes.data, times.data]);
 
   // أيام التسليم المتاحة تُستخرج من أوقات التسليم المتاحة
-  const dayOptions = useMemo(() => deliveryDaysFromTimes(timeOptions), [timeOptions]);
+  const deliveryDays = useMemo(() => deliveryDaysFromTimes(timeOptions), [timeOptions]);
+
+  // الأيام المسموحة لجميع منتجات السلة (تقاطع أيام الحجز مع أيام التسليم)
+  const candidateDays = useMemo(() => {
+    const booking = commonBookingDays(productBookingDays.data, productIds);
+    return deliveryDays.filter((d) => booking.includes(d));
+  }, [deliveryDays, productBookingDays.data, productIds]);
+
+  // أقرب يوم قادم مشترك (يُحدد تلقائياً)
+  const autoDay = useMemo(() => nearestCommonDay(candidateDays), [candidateDays]);
 
   const dayTimeOptions = useMemo(
-    () => (bookingDay === "" ? [] : timesForDay(timeOptions, Number(bookingDay))),
-    [timeOptions, bookingDay],
+    () => (autoDay === null ? [] : timesForDay(timeOptions, autoDay)),
+    [timeOptions, autoDay],
   );
 
   const hasTimeRestriction = productIds.some(
     (id) => productTimeIds(productTimes.data, id).length > 0,
   );
 
-  // منتج غير متاح للحجز اليوم
-  const unavailableToday = useMemo(
-    () => productIds.filter((id) => !isProductAvailableToday(productBookingDays.data, id)),
-    [productIds, productBookingDays.data],
-  );
-
-  const conflict =
-    cart.items.length > 0 &&
-    ((hasTimeRestriction && timeOptions.length === 0) || unavailableToday.length > 0);
-
-  useEffect(() => {
-    if (bookingDay !== "" && !dayOptions.includes(Number(bookingDay))) setBookingDay("");
-  }, [dayOptions, bookingDay]);
+  const conflict = cart.items.length > 0 && autoDay === null;
 
   useEffect(() => {
     if (deliveryTimeId && !dayTimeOptions.some((t) => t.id === deliveryTimeId))
@@ -123,11 +120,7 @@ function CheckoutPage() {
       return;
     }
     if (conflict) {
-      toast.error("بعض منتجات السلة غير متاحة اليوم أو لا تشترك في نفس أوقات التسليم");
-      return;
-    }
-    if (dayOptions.length > 0 && !bookingDay) {
-      toast.error("اختر يوم التسليم");
+      toast.error("لا يوجد يوم تسليم مشترك بين منتجات السلة");
       return;
     }
     if (dayTimeOptions.length > 0 && !deliveryTimeId) {
@@ -147,7 +140,7 @@ function CheckoutPage() {
       _notes: parsed.data.notes ?? "",
       ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
       ...(locationId ? { _delivery_location_id: locationId } : {}),
-      ...(bookingDay === "" ? {} : { _booking_day: Number(bookingDay) }),
+      ...(autoDay === null ? {} : { _booking_day: autoDay }),
       _items: cart.items.map((item) => ({
         product_id: item.productId,
         quantity: item.quantity,
@@ -302,9 +295,7 @@ function CheckoutPage() {
           {conflict && (
             <div className="rounded-2xl bg-destructive/10 p-3 text-sm">
               <p className="font-bold text-destructive">
-                {unavailableToday.length > 0
-                  ? "بعض منتجات السلة غير متاحة للحجز اليوم"
-                  : "منتجات السلة لا تشترك في نفس أوقات التسليم"}
+                لا يوجد يوم تسليم مشترك بين منتجات السلة
               </p>
               <p className="mt-1 text-muted-foreground">
                 يرجى إرسال هذه المنتجات في طلبات منفصلة، أو إزالة أحدها لإكمال الطلب.
@@ -312,36 +303,23 @@ function CheckoutPage() {
             </div>
           )}
 
-          {hasTimeRestriction && !conflict && (
-            <p className="text-xs text-muted-foreground">
-              تظهر لك فقط أيام وأوقات التسليم المتاحة لجميع منتجات سلتك.
-            </p>
-          )}
-
-          {dayOptions.length > 0 && (
-            <div className="space-y-2">
-              <Label>يوم التسليم</Label>
-              <Select value={bookingDay} onValueChange={setBookingDay}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر يوم التسليم" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dayOptions.map((d) => (
-                    <SelectItem key={d} value={String(d)}>
-                      {dayLabel(d)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {autoDay !== null && (
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="font-bold text-primary">📅 موعد التسليم: {dayLabel(autoDay)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {hasTimeRestriction
+                  ? "تم تحديد أقرب يوم متاح لجميع منتجات سلتك تلقائياً."
+                  : "تم تحديد أقرب يوم تسليم متاح تلقائياً."}
+              </p>
             </div>
           )}
 
-          {bookingDay !== "" && (
+          {autoDay !== null && (
             <div className="space-y-2">
-              <Label>وقت التسليم</Label>
+              <Label>اختر وقت التسليم</Label>
               {dayTimeOptions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  لا توجد أوقات تسليم في هذا اليوم، اختر يوماً آخر.
+                  لا توجد أوقات تسليم متاحة في هذا اليوم.
                 </p>
               ) : (
                 <Select value={deliveryTimeId} onValueChange={setDeliveryTimeId}>
@@ -380,7 +358,7 @@ function CheckoutPage() {
             </div>
           )}
 
-          {timeOptions.length === 0 && dayOptions.length === 0 && locationOptions.length === 0 && (
+          {timeOptions.length === 0 && locationOptions.length === 0 && (
             <p className="text-sm text-muted-foreground">لا توجد خيارات تسليم متاحة حالياً.</p>
           )}
 

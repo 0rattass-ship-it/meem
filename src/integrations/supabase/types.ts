@@ -354,6 +354,7 @@ export type Database = {
       }
       products: {
         Row: {
+          addons_required: boolean
           badge: Database["public"]["Enums"]["product_badge"]
           category_id: string | null
           created_at: string
@@ -367,6 +368,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
           category_id?: string | null
           created_at?: string
@@ -380,6 +382,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
           category_id?: string | null
           created_at?: string

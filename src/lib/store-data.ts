@@ -26,6 +26,7 @@ export type Product = {
   is_available: boolean;
   sort_order: number;
   badge: ProductBadge;
+  addons_required: boolean;
 };
 
 export type Addon = {
@@ -226,6 +227,31 @@ export function isProductAvailableToday(
   const days = productDays(rows, productId);
   if (days.length === 0) return true;
   return days.includes(today);
+}
+
+/** أيام الحجز المسموحة لكل منتجات السلة (تقاطع، والفراغ يعني كل الأيام) */
+export function commonBookingDays(
+  rows: ProductBookingDay[] | undefined,
+  productIds: string[],
+) {
+  let allowed = WEEK_DAYS.map((d) => d.value as number);
+  for (const id of productIds) {
+    const own = productDays(rows, id);
+    if (own.length > 0) allowed = allowed.filter((d) => own.includes(d));
+  }
+  return allowed;
+}
+
+/** أقرب يوم قادم متاح ومشترك (التسليم لا يكون في نفس اليوم) */
+export function nearestCommonDay(
+  candidateDays: number[],
+  today = new Date().getDay(),
+) {
+  for (let i = 1; i <= 7; i += 1) {
+    const day = (today + i) % 7;
+    if (candidateDays.includes(day)) return day;
+  }
+  return null;
 }
 
 export const ORDER_STATUSES = [

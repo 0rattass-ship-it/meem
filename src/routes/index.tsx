@@ -352,7 +352,14 @@ function ProductDialog({
 
         {addons.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-foreground">الإضافات</p>
+            <p className="font-semibold text-foreground">
+              الإضافات
+              {product.addons_required && (
+                <span className="ms-2 text-xs font-bold text-destructive">
+                  (اختر إضافة واحدة على الأقل)
+                </span>
+              )}
+            </p>
             {addons.map((addon) => (
               <label
                 key={addon.id}
@@ -398,8 +405,15 @@ function ProductDialog({
         <Button
           size="lg"
           className="w-full rounded-full"
-          disabled={!bookingAvailable}
+          disabled={
+            !bookingAvailable ||
+            (product.addons_required && addons.length > 0 && chosenAddons.length === 0)
+          }
           onClick={() => {
+            if (product.addons_required && addons.length > 0 && chosenAddons.length === 0) {
+              toast.error("اختر إضافة واحدة على الأقل");
+              return;
+            }
             cart.addItem({
               productId: product.id,
               name: product.name,

@@ -73,6 +73,7 @@ export function ProductsManager() {
         sort_order: 1,
         description: "",
         badge: "none",
+        addons_required: false,
       });
       setDays([]);
       setTimeIds([]);
@@ -145,6 +146,7 @@ export function ProductsManager() {
       is_available: editing.is_available ?? true,
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
+      addons_required: editing.addons_required ?? false,
     };
     const { data, error } = editing.id
       ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
@@ -378,6 +380,19 @@ export function ProductsManager() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-1 rounded-xl bg-surface p-3">
+              <div className="flex items-center justify-between">
+                <Label>الإضافات إجبارية</Label>
+                <Switch
+                  checked={editing?.addons_required ?? false}
+                  onCheckedChange={(v) => setEditing({ ...editing, addons_required: v })}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                عند التفعيل يجب على العميل اختيار إضافة واحدة على الأقل قبل إضافة المنتج للسلة.
+              </p>
             </div>
 
             <div className="space-y-2 rounded-xl bg-surface p-3">
