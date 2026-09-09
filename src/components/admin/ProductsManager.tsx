@@ -382,6 +382,19 @@ export function ProductsManager() {
               </Select>
             </div>
 
+            <div className="space-y-1 rounded-xl bg-surface p-3">
+              <div className="flex items-center justify-between">
+                <Label>الإضافات إجبارية</Label>
+                <Switch
+                  checked={editing?.addons_required ?? false}
+                  onCheckedChange={(v) => setEditing({ ...editing, addons_required: v })}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                عند التفعيل يجب على العميل اختيار إضافة واحدة على الأقل قبل إضافة المنتج للسلة.
+              </p>
+            </div>
+
             <div className="space-y-2 rounded-xl bg-surface p-3">
               <Label>أيام الحجز المتاحة لهذا المنتج</Label>
               <p className="text-xs text-muted-foreground">
