@@ -295,9 +295,7 @@ function CheckoutPage() {
           {conflict && (
             <div className="rounded-2xl bg-destructive/10 p-3 text-sm">
               <p className="font-bold text-destructive">
-                {unavailableToday.length > 0
-                  ? "بعض منتجات السلة غير متاحة للحجز اليوم"
-                  : "منتجات السلة لا تشترك في نفس أوقات التسليم"}
+                لا يوجد يوم تسليم مشترك بين منتجات السلة
               </p>
               <p className="mt-1 text-muted-foreground">
                 يرجى إرسال هذه المنتجات في طلبات منفصلة، أو إزالة أحدها لإكمال الطلب.
@@ -305,36 +303,23 @@ function CheckoutPage() {
             </div>
           )}
 
-          {hasTimeRestriction && !conflict && (
-            <p className="text-xs text-muted-foreground">
-              تظهر لك فقط أيام وأوقات التسليم المتاحة لجميع منتجات سلتك.
-            </p>
-          )}
-
-          {dayOptions.length > 0 && (
-            <div className="space-y-2">
-              <Label>يوم التسليم</Label>
-              <Select value={bookingDay} onValueChange={setBookingDay}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر يوم التسليم" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dayOptions.map((d) => (
-                    <SelectItem key={d} value={String(d)}>
-                      {dayLabel(d)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {autoDay !== null && (
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="font-bold text-primary">📅 موعد التسليم: {dayLabel(autoDay)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {hasTimeRestriction
+                  ? "تم تحديد أقرب يوم متاح لجميع منتجات سلتك تلقائياً."
+                  : "تم تحديد أقرب يوم تسليم متاح تلقائياً."}
+              </p>
             </div>
           )}
 
-          {bookingDay !== "" && (
+          {autoDay !== null && (
             <div className="space-y-2">
-              <Label>وقت التسليم</Label>
+              <Label>اختر وقت التسليم</Label>
               {dayTimeOptions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  لا توجد أوقات تسليم في هذا اليوم، اختر يوماً آخر.
+                  لا توجد أوقات تسليم متاحة في هذا اليوم.
                 </p>
               ) : (
                 <Select value={deliveryTimeId} onValueChange={setDeliveryTimeId}>
