@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Store,
   UtensilsCrossed,
@@ -23,6 +23,7 @@ import {
 import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   dayLabel,
@@ -50,6 +51,9 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
       },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
     ],
   }),
   component: StorePage,
@@ -64,6 +68,35 @@ function StorePage() {
   const cart = useCart();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
+
+  useEffect(() => {
+    const storageKey = "meem-visitor-session";
+    const sessionWindowMs = 30 * 60 * 1000;
+    const now = Date.now();
+
+    try {
+      const stored = localStorage.getItem(storageKey);
+      let sessionId = "";
+      let lastSeen = 0;
+
+      if (stored) {
+        const parsed = JSON.parse(stored) as { id?: string; lastSeen?: number };
+        sessionId = typeof parsed.id === "string" ? parsed.id : "";
+        lastSeen = typeof parsed.lastSeen === "number" ? parsed.lastSeen : 0;
+      }
+
+      if (!sessionId || now - lastSeen >= sessionWindowMs) {
+        sessionId = typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify({ id: sessionId, lastSeen: now }));
+      void supabase.rpc("record_visitor_session", { _session_id: sessionId });
+    } catch {
+      // Visitor analytics must never interrupt or block the store.
+    }
+  }, []);
 
   const availableToday = (productId: string) =>
     isProductAvailableToday(bookingDays.data, productId);

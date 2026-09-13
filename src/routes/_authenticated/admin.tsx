@@ -10,6 +10,7 @@ import { ProductsManager } from "@/components/admin/ProductsManager";
 import { AddonsManager } from "@/components/admin/AddonsManager";
 import { OrdersManager } from "@/components/admin/OrdersManager";
 import { DeliverySettingsManager } from "@/components/admin/DeliverySettingsManager";
+import { StatisticsManager } from "@/components/admin/StatisticsManager";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -108,6 +109,9 @@ function AdminPage() {
             <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="orders">
               الطلبات
             </TabsTrigger>
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="statistics">
+              📊 الإحصائيات
+            </TabsTrigger>
             <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="delivery">
               التسليم
             </TabsTrigger>
@@ -123,6 +127,9 @@ function AdminPage() {
           </TabsList>
           <TabsContent value="orders">
             <OrdersManager />
+          </TabsContent>
+          <TabsContent value="statistics">
+            <StatisticsManager />
           </TabsContent>
           <TabsContent value="delivery">
             <DeliverySettingsManager />

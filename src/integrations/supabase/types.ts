@@ -405,6 +405,30 @@ export type Database = {
           },
         ]
       }
+      visitor_sessions: {
+        Row: {
+          id: string
+          session_id: string
+          first_seen: string
+          last_seen: string
+          visit_count: number
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          first_seen?: string
+          last_seen?: string
+          visit_count?: number
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          first_seen?: string
+          last_seen?: string
+          visit_count?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -437,6 +461,12 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_visitor_session: {
+        Args: {
+          _session_id: string
+        }
+        Returns: undefined
       }
       place_order: {
         Args: {
