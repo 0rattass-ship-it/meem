@@ -89,13 +89,18 @@ function StorePage() {
       setAuthLoading(false);
       return;
     }
+    // The auth session is the source of truth for whether the customer is signed in.
+    // A missing profile row must not make a successfully signed-in customer look logged out.
     const { data: profileRow } = await supabase
       .from("customer_profiles")
       .select("name")
       .eq("user_id", user.id)
       .maybeSingle();
-    setProfile(profileRow ? { name: profileRow.name, email: user.email ?? "" } : null);
 
+    const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
+    setProfile({ name: profileRow?.name || fallbackName, email: user.email ?? "" });
+
+    // Keep the last 10 orders linked to the authenticated account.
     const { data: orders } = await supabase
       .from("orders")
       .select("order_number, created_at, status, booking_day, delivery_time")
@@ -115,7 +120,12 @@ function StorePage() {
   useEffect(() => {
     void loadCustomerData();
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      void loadCustomerData();
+      // Supabase warns against making Supabase calls inside the auth callback
+      // because the auth lock may still be held. Defer the refresh until the
+      // callback has returned so sign-in can finish cleanly.
+      window.setTimeout(() => {
+        void loadCustomerData();
+      }, 0);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
