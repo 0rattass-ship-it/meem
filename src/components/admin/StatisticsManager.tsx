@@ -37,9 +37,11 @@ export function StatisticsManager() {
     queryKey: ["admin-statistics"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc(
-  "get_admin_statistics",
-  { p_request: "statistics" },
-);
+        "get_admin_statistics_v2",
+        {
+          p_request: "statistics",
+        },
+      );
 
       if (error) throw error;
 
@@ -106,7 +108,6 @@ export function StatisticsManager() {
         </p>
       </div>
 
-      {/* أهم الإحصائيات */}
       <section className="grid grid-cols-2 gap-3">
         <StatCard
           icon={<TrendingUp className="size-5" />}
@@ -133,7 +134,6 @@ export function StatisticsManager() {
         />
       </section>
 
-      {/* الشهر الحالي */}
       <section className="card-soft p-4">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -184,7 +184,6 @@ export function StatisticsManager() {
         </div>
       </section>
 
-      {/* أكثر 5 منتجات */}
       <section className="card-soft p-4">
         <div className="flex items-center gap-2">
           <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -244,7 +243,6 @@ export function StatisticsManager() {
         )}
       </section>
 
-      {/* الإجمالي العام */}
       <section className="card-soft p-4">
         <h3 className="font-bold text-primary">
           الإجمالي منذ بداية المشروع
@@ -280,6 +278,7 @@ export function StatisticsManager() {
     </div>
   );
 }
+
 function StatCard({
   icon,
   label,
@@ -305,5 +304,3 @@ function StatCard({
     </div>
   );
 }
-function StatCard({
- 
