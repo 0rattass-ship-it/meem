@@ -28,6 +28,8 @@ import {
   useDeliveryTimes,
   useProductBookingDays,
   useProductDeliveryTimes,
+  usePaymentSettings,
+  statusLabel,
 } from "@/lib/store-data";
 
 
@@ -53,6 +55,17 @@ const schema = z.object({
   notes: z.string().trim().max(300).optional(),
 });
 
+type TrackedOrder = {
+  order_number: number;
+  customer_name: string;
+  total: number;
+  status: string;
+  payment_method: string;
+  payment_status: string;
+  payment_window: string | null;
+  created_at: string;
+};
+
 function CheckoutPage() {
   const cart = useCart();
   const navigate = useNavigate();
@@ -60,12 +73,15 @@ function CheckoutPage() {
   const [deliveryTimeId, setDeliveryTimeId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "pay_at_store">("bank_transfer");
+  const [done, setDone] = useState<{ orderNumber: number; total: number; trackingToken: string; paymentMethod: string } | null>(null);
+  const [tracking, setTracking] = useState<{ loading: boolean; data: TrackedOrder | null; error: boolean }>({ loading: false, data: null, error: false });
 
   const times = useDeliveryTimes();
   const locations = useDeliveryLocations();
   const productBookingDays = useProductBookingDays();
   const productTimes = useProductDeliveryTimes();
+  const paymentSettings = usePaymentSettings();
 
   const locationOptions = locations.data ?? [];
   const productIds = useMemo(
@@ -111,6 +127,28 @@ function CheckoutPage() {
       setDeliveryTimeId("");
   }, [dayTimeOptions, deliveryTimeId]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const orderNumber = Number(params.get("order"));
+    const token = params.get("token") ?? "";
+    if (!Number.isInteger(orderNumber) || orderNumber <= 0 || token.length < 32) return;
+
+    let cancelled = false;
+    setTracking({ loading: true, data: null, error: false });
+    supabase.rpc("get_order_tracking", { _order_number: orderNumber, _tracking_token: token })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        const row = Array.isArray(data) ? data[0] : data;
+        setTracking({ loading: false, data: error || !row ? null : (row as TrackedOrder), error: Boolean(error || !row) });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  function createTrackingToken() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
 
   async function submit() {
     const parsed = schema.safeParse(form);
@@ -134,13 +172,25 @@ function CheckoutPage() {
       toast.error("اختر مكان التسليم");
       return;
     }
+    const settings = paymentSettings.data;
+    if (paymentMethod === "bank_transfer" && (!settings?.account_holder_name || !settings?.account_number)) {
+      toast.error("لم يتم إعداد بيانات الحساب البنكي من لوحة الإدارة بعد");
+      return;
+    }
+    if (paymentMethod === "pay_at_store" && !settings?.payment_window) {
+      toast.error("لم يتم تحديد وقت الدفع في المشرب من لوحة الإدارة بعد");
+      return;
+    }
 
+    const trackingToken = createTrackingToken();
     setSending(true);
-    const { data, error } = await supabase.rpc("place_order", {
+    const { data, error } = await supabase.rpc("place_order_with_payment", {
       _customer_name: parsed.data.customer_name,
       _customer_phone: parsed.data.customer_phone,
       _address: parsed.data.address ?? "",
       _notes: parsed.data.notes ?? "",
+      _payment_method: paymentMethod,
+      _tracking_token: trackingToken,
       ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
       ...(locationId ? { _delivery_location_id: locationId } : {}),
       ...(autoDay === null ? {} : { _booking_day: autoDay }),
@@ -153,26 +203,89 @@ function CheckoutPage() {
 
     setSending(false);
 
-    if (error || typeof data !== "number") {
+    if (error || !data || typeof data !== "object" || !("order_number" in data)) {
       toast.error("تعذّر إرسال الطلب، حاول مرة أخرى");
       return;
     }
+    const result = data as { order_number: number; total: number; payment_method: string };
     cart.clear();
-    setDone(data);
+    setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
   }
 
 
 
+  if (tracking.loading || tracking.data || tracking.error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="card-soft max-w-sm p-8 text-center">
+          {tracking.loading ? (
+            <p className="text-muted-foreground">جاري تحميل حالة الطلب…</p>
+          ) : tracking.data ? (
+            <>
+              <h1 className="text-2xl font-extrabold text-primary">متابعة طلبك</h1>
+              <p className="mt-3 text-muted-foreground">
+                رقم الطلب: <span className="font-bold text-foreground">{tracking.data.order_number}</span>
+              </p>
+              <p className="mt-4 rounded-2xl bg-surface p-4 font-bold text-primary">
+                {tracking.data.payment_status === "paid" && tracking.data.status === "preparing"
+                  ? "تم تأكيد طلبك وهو قيد التجهيز."
+                  : statusLabel(tracking.data.status)}
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                المبلغ: {formatPrice(Number(tracking.data.total))}
+              </p>
+              <Button className="mt-6 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
+                العودة للقائمة
+              </Button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-extrabold text-primary">تعذر العثور على الطلب</h1>
+              <p className="mt-2 text-sm text-muted-foreground">تأكد من استخدام رابط المتابعة الخاص بطلبك.</p>
+              <Button className="mt-6 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
+                العودة للقائمة
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (done !== null) {
+    const trackingUrl = `/checkout?order=${encodeURIComponent(done.orderNumber)}&token=${encodeURIComponent(done.trackingToken)}`;
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="card-soft max-w-sm p-8 text-center">
           <h1 className="text-2xl font-extrabold text-primary">تم إرسال طلبك</h1>
           <p className="mt-3 text-muted-foreground">
-            رقم طلبك: <span className="font-bold text-foreground">{done}</span>
+            رقم طلبك: <span className="font-bold text-foreground">{done.orderNumber}</span>
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">سيتم تجهيز طلبك في أقرب وقت.</p>
-          <Button className="mt-6 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
+          <p className="mt-2 text-sm text-muted-foreground">
+            المبلغ: {formatPrice(done.total)}
+          </p>
+          {done.paymentMethod === "bank_transfer" ? (
+            <div className="mt-4 rounded-2xl bg-surface p-4 text-sm">
+              <p className="font-bold text-primary">تحويل بنكي</p>
+              <p className="mt-1">حوّل المبلغ الموضح أعلاه إلى الحساب التالي:</p>
+              <p className="mt-2 font-semibold">{paymentSettings.data?.account_holder_name}</p>
+              <p dir="ltr" className="mt-1 font-bold">{paymentSettings.data?.account_number}</p>
+              <p className="mt-2 text-xs text-muted-foreground">بعد التحويل يبقى الطلب بانتظار التحقق اليدوي.</p>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl bg-surface p-4 text-sm">
+              <p className="font-bold text-primary">الدفع في المشرب</p>
+              <p className="mt-1">وقت الدفع: {paymentSettings.data?.payment_window}</p>
+              <p className="mt-2 text-xs text-muted-foreground">يبقى الطلب بانتظار الدفع حتى يتم تأكيده يدويًا.</p>
+            </div>
+          )}
+          <a
+            href={trackingUrl}
+            className="mt-4 block rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            متابعة حالة الطلب
+          </a>
+          <Button variant="outline" className="mt-3 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
             العودة للقائمة
           </Button>
         </div>
@@ -290,6 +403,46 @@ function CheckoutPage() {
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
+        </section>
+
+        <section className="card-soft space-y-4 p-4">
+          <h2 className="font-bold text-foreground">طريقة الدفع</h2>
+          <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "bank_transfer" | "pay_at_store")}>
+            <SelectTrigger>
+              <SelectValue placeholder="اختر طريقة الدفع" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
+              <SelectItem value="pay_at_store">الدفع في المشرب</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {paymentMethod === "bank_transfer" ? (
+            <div className="rounded-2xl bg-surface p-4 text-sm">
+              <p className="font-bold text-primary">بيانات التحويل البنكي</p>
+              {paymentSettings.isLoading ? (
+                <p className="mt-2 text-muted-foreground">جاري تحميل بيانات الحساب…</p>
+              ) : paymentSettings.isError ? (
+                <p className="mt-2 text-muted-foreground">تعذّر تحميل بيانات الحساب حاليًا. حاول مرة أخرى.</p>
+              ) : (
+                <>
+                  <p className="mt-2">اسم صاحب الحساب: <span className="font-semibold">{paymentSettings.data?.account_holder_name || "غير محدد"}</span></p>
+                  <p className="mt-1">رقم الحساب: <span dir="ltr" className="font-semibold">{paymentSettings.data?.account_number || "غير محدد"}</span></p>
+                  <p className="mt-2 font-bold text-primary">المبلغ المطلوب تحويله: {formatPrice(cart.total)}</p>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-surface p-4 text-sm">
+              <p className="font-bold text-primary">الدفع في المشرب</p>
+              {paymentSettings.isLoading ? (
+                <p className="mt-2 text-muted-foreground">جاري تحميل وقت الدفع…</p>
+              ) : (
+                <p className="mt-2">وقت الدفع: <span className="font-semibold">{paymentSettings.data?.payment_window || "غير محدد"}</span></p>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">أدخل اسمك في بيانات العميل أعلاه، ثم ادفع المبلغ عند حضورك للمشرب.</p>
+            </div>
+          )}
         </section>
 
         <section className="card-soft space-y-4 p-4">

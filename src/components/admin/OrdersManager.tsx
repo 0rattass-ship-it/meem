@@ -35,6 +35,9 @@ type Order = {
   delivery_time: string | null;
   delivery_location: string | null;
   booking_day: number | null;
+  payment_method: string;
+  payment_status: string;
+  payment_window: string | null;
   order_items: OrderItem[];
 };
 
@@ -51,7 +54,23 @@ export function OrdersManager() {
       if (error) throw error;
       return (data ?? []) as unknown as Order[];
     },
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
   });
+
+  async function confirmPayment(id: string) {
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_status: "paid", status: "preparing" })
+      .eq("id", id);
+    if (error) {
+      toast.error("تعذّر تأكيد الدفع");
+      return;
+    }
+    toast.success("تم تأكيد الدفع والطلب");
+    qc.invalidateQueries({ queryKey: ["orders"] });
+    qc.invalidateQueries({ queryKey: ["admin-statistics"] });
+  }
 
   async function updateStatus(id: string, status: string) {
     const { error } = await supabase
@@ -119,6 +138,15 @@ export function OrdersManager() {
                 <p className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleString("ar-EG")}
                 </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  طريقة الدفع: {order.payment_method === "bank_transfer" ? "تحويل بنكي" : order.payment_method === "pay_at_store" ? "الدفع في المشرب" : "غير محددة"}
+                </p>
+                {order.payment_window && (
+                  <p className="text-xs text-muted-foreground">وقت الدفع في المشرب: {order.payment_window}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  حالة الدفع: {order.payment_status === "paid" ? "تم الدفع" : order.payment_status === "pending_bank_transfer" ? "بانتظار التحقق من التحويل" : order.payment_status === "pending_store_payment" ? "بانتظار الدفع في المشرب" : "غير مؤكد"}
+                </p>
               </div>
               <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
                 {statusLabel(order.status)}
@@ -145,7 +173,12 @@ export function OrdersManager() {
 
             <div className="mt-3 flex items-center justify-between gap-2">
               <p className="font-bold text-primary">{formatPrice(Number(order.total))}</p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {order.payment_status !== "paid" && (order.payment_method === "bank_transfer" || order.payment_method === "pay_at_store") && (
+                  <Button size="sm" className="rounded-full" onClick={() => confirmPayment(order.id)}>
+                    تأكيد الدفع / تأكيد الطلب
+                  </Button>
+                )}
                 <Select value={order.status} onValueChange={(v) => updateStatus(order.id, v)}>
                   <SelectTrigger className="w-36">
                     <SelectValue />

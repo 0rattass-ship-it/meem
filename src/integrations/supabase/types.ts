@@ -215,6 +215,10 @@ export type Database = {
           id: string
           notes: string | null
           order_number: number
+          payment_method: string
+          payment_status: string
+          payment_window: string | null
+          tracking_token_hash: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at: string
@@ -230,6 +234,10 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method?: string
+          payment_status?: string
+          payment_window?: string | null
+          tracking_token_hash?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
@@ -245,8 +253,36 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method?: string
+          payment_status?: string
+          payment_window?: string | null
+          tracking_token_hash?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_settings: {
+        Row: {
+          id: number
+          account_holder_name: string
+          account_number: string
+          payment_window: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          account_holder_name?: string
+          account_number?: string
+          payment_window?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          account_holder_name?: string
+          account_number?: string
+          payment_window?: string
           updated_at?: string
         }
         Relationships: []
@@ -455,6 +491,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_order_tracking: {
+        Args: {
+          _order_number: number
+          _tracking_token: string
+        }
+        Returns: {
+          order_number: number
+          customer_name: string
+          total: number
+          status: Database["public"]["Enums"]["order_status"]
+          payment_method: string
+          payment_status: string
+          payment_window: string | null
+          created_at: string
+        }[]
+      }
+      place_order_with_payment: {
+        Args: {
+          _customer_name: string
+          _customer_phone: string
+          _address: string
+          _notes: string
+          _items: Json
+          _payment_method: string
+          _tracking_token: string
+          _delivery_time_id?: string
+          _delivery_location_id?: string
+          _booking_day?: number
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

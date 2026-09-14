@@ -5,65 +5,34 @@ import { CalendarDays, Eye, ShoppingBag, TrendingUp, Users } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/cart";
 
+type TopProduct = [string, { quantity: number; sales: number }];
+
+type Statistics = {
+  orderCount: number;
+  revenue: number;
+  monthOrderCount: number;
+  monthRevenue: number;
+  uniqueVisitors: number;
+  totalVisits: number;
+  topProducts: TopProduct[];
+  monthTopProducts: TopProduct[];
+  monthLabel: string;
+};
+
 export function StatisticsManager() {
   const stats = useQuery({
     queryKey: ["admin-statistics"],
     queryFn: async () => {
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-      const [ordersResult, visitorsResult, itemsResult] = await Promise.all([
-        supabase.from("orders").select("id, total, created_at"),
-        supabase.from("visitor_sessions").select("session_id, visit_count"),
-        supabase.from("order_items").select("product_name, quantity, line_total, created_at"),
-      ]);
-
-      if (ordersResult.error) throw ordersResult.error;
-      if (visitorsResult.error) throw visitorsResult.error;
-      if (itemsResult.error) throw itemsResult.error;
-
-      const orders = ordersResult.data ?? [];
-      const visitors = visitorsResult.data ?? [];
-      const items = itemsResult.data ?? [];
-      const monthOrders = orders.filter((order) => {
-        const createdAt = new Date(order.created_at);
-        return createdAt >= monthStart && createdAt < nextMonthStart;
-      });
-
-      const topProducts = new Map<string, { quantity: number; sales: number }>();
-      const monthTopProducts = new Map<string, { quantity: number; sales: number }>();
-
-      for (const item of items) {
-        const current = topProducts.get(item.product_name) ?? { quantity: 0, sales: 0 };
-        current.quantity += Number(item.quantity ?? 0);
-        current.sales += Number(item.line_total ?? 0);
-        topProducts.set(item.product_name, current);
-
-        const createdAt = new Date(item.created_at);
-        if (createdAt >= monthStart && createdAt < nextMonthStart) {
-          const monthCurrent = monthTopProducts.get(item.product_name) ?? { quantity: 0, sales: 0 };
-          monthCurrent.quantity += Number(item.quantity ?? 0);
-          monthCurrent.sales += Number(item.line_total ?? 0);
-          monthTopProducts.set(item.product_name, monthCurrent);
-        }
-      }
-
-      return {
-        orderCount: orders.length,
-        revenue: orders.reduce((sum, order) => sum + Number(order.total ?? 0), 0),
-        uniqueVisitors: visitors.length,
-        totalVisits: visitors.reduce((sum, visitor) => sum + Number(visitor.visit_count ?? 0), 0),
-        topProducts: [...topProducts.entries()]
-          .sort((a, b) => b[1].quantity - a[1].quantity)
-          .slice(0, 5),
-        monthOrderCount: monthOrders.length,
-        monthLabel: now.toLocaleDateString("ar-EG", { month: "long", year: "numeric" }),
-        monthTopProducts: [...monthTopProducts.entries()]
-          .sort((a, b) => b[1].quantity - a[1].quantity)
-          .slice(0, 5),
-      };
+      const { data, error } = await supabase.rpc("get_admin_statistics");
+      if (error) throw error;
+      const result = data as unknown as Statistics & { monthLabel: string };
+      const monthDate = new Date(`${result.monthLabel}-01T00:00:00`);
+      return { ...result, monthLabel: monthDate.toLocaleDateString("ar-EG", { month: "long", year: "numeric" }) };
     },
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 
   if (stats.isLoading) {
@@ -71,7 +40,18 @@ export function StatisticsManager() {
   }
 
   if (stats.isError) {
-    return <p className="py-8 text-center text-muted-foreground">تعذّر تحميل الإحصائيات.</p>;
+    return (
+      <div className="py-8 text-center">
+        <p className="text-muted-foreground">تعذّر تحميل الإحصائيات.</p>
+        <button
+          type="button"
+          className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
+          onClick={() => stats.refetch()}
+        >
+          إعادة المحاولة
+        </button>
+      </div>
+    );
   }
 
   const data = stats.data;
@@ -102,11 +82,15 @@ export function StatisticsManager() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-surface p-4">
-          <p className="text-xs text-muted-foreground">إجمالي الطلبات هذا الشهر</p>
-          <p className="mt-1 text-2xl font-extrabold text-primary">
-            {data.monthOrderCount.toLocaleString("ar-EG")}
-          </p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-surface p-4">
+            <p className="text-xs text-muted-foreground">إجمالي الطلبات هذا الشهر</p>
+            <p className="mt-1 text-2xl font-extrabold text-primary">{data.monthOrderCount.toLocaleString("ar-EG")}</p>
+          </div>
+          <div className="rounded-2xl bg-surface p-4">
+            <p className="text-xs text-muted-foreground">المبيعات هذا الشهر</p>
+            <p className="mt-1 text-xl font-extrabold text-primary">{formatPrice(data.monthRevenue)}</p>
+          </div>
         </div>
 
         <div className="mt-4">
@@ -119,9 +103,7 @@ export function StatisticsManager() {
                 <li key={name} className="flex items-center justify-between gap-3 rounded-2xl bg-surface px-3 py-2">
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{index + 1}. {name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {product.quantity.toLocaleString("ar-EG")} طلب/قطعة
-                    </p>
+                    <p className="text-xs text-muted-foreground">{product.quantity.toLocaleString("ar-EG")} طلب/قطعة</p>
                   </div>
                   <span className="shrink-0 text-sm font-bold text-primary">{formatPrice(product.sales)}</span>
                 </li>

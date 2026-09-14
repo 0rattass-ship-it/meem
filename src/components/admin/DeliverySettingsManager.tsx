@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ import {
   dayLabel,
   useDeliveryLocations,
   useDeliveryTimes,
+  usePaymentSettings,
   type DeliveryLocation,
   type DeliveryTime,
 } from "@/lib/store-data";
@@ -30,12 +31,42 @@ export function DeliverySettingsManager() {
   const qc = useQueryClient();
   const times = useDeliveryTimes(true);
   const locations = useDeliveryLocations(true);
+  const paymentSettings = usePaymentSettings();
 
   const [editTime, setEditTime] = useState<Partial<DeliveryTime> | null>(null);
   const [editLocation, setEditLocation] = useState<Partial<DeliveryLocation> | null>(null);
+  const [paymentForm, setPaymentForm] = useState({ account_holder_name: "", account_number: "", payment_window: "" });
+
+  useEffect(() => {
+    if (paymentSettings.data) setPaymentForm(paymentSettings.data);
+  }, [paymentSettings.data]);
 
   const refreshTimes = () => qc.invalidateQueries({ queryKey: ["delivery_times"] });
   const refreshLocations = () => qc.invalidateQueries({ queryKey: ["delivery_locations"] });
+
+  async function savePaymentSettings() {
+    const accountHolder = paymentForm.account_holder_name.trim();
+    const accountNumber = paymentForm.account_number.trim();
+    const paymentWindow = paymentForm.payment_window.trim();
+    if (!accountHolder || !accountNumber || !paymentWindow) {
+      toast.error("أكمل اسم صاحب الحساب ورقم الحساب ووقت الدفع في المشرب");
+      return;
+    }
+    const { error } = await supabase
+      .from("payment_settings")
+      .update({
+        account_holder_name: accountHolder,
+        account_number: accountNumber,
+        payment_window: paymentWindow,
+      })
+      .eq("id", 1);
+    if (error) {
+      toast.error("تعذّر حفظ إعدادات الدفع");
+      return;
+    }
+    toast.success("تم حفظ إعدادات الدفع");
+    qc.invalidateQueries({ queryKey: ["payment-settings"] });
+  }
 
   async function saveTime() {
     const label = editTime?.label?.trim();
@@ -129,6 +160,44 @@ export function DeliverySettingsManager() {
 
   return (
     <div className="space-y-6">
+      <section className="card-soft space-y-4 p-4">
+        <div>
+          <h2 className="font-bold text-primary">إعدادات الدفع</h2>
+          <p className="mt-1 text-xs text-muted-foreground">بيانات التحويل البنكي ووقت الدفع في المشرب التي تظهر للعميل.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payment-account-holder">اسم صاحب الحساب</Label>
+          <Input
+            id="payment-account-holder"
+            value={paymentForm.account_holder_name}
+            maxLength={120}
+            onChange={(e) => setPaymentForm({ ...paymentForm, account_holder_name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payment-account-number">رقم الحساب</Label>
+          <Input
+            id="payment-account-number"
+            dir="ltr"
+            value={paymentForm.account_number}
+            maxLength={80}
+            onChange={(e) => setPaymentForm({ ...paymentForm, account_number: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payment-window">وقت الدفع في المشرب</Label>
+          <Input
+            id="payment-window"
+            value={paymentForm.payment_window}
+            maxLength={100}
+            placeholder="مثال: 5:00 م – 8:00 م"
+            onChange={(e) => setPaymentForm({ ...paymentForm, payment_window: e.target.value })}
+          />
+        </div>
+        <Button className="w-full rounded-full" onClick={savePaymentSettings} disabled={paymentSettings.isLoading}>
+          حفظ إعدادات الدفع
+        </Button>
+      </section>
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-bold text-primary">

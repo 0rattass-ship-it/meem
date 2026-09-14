@@ -1,12 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+const publicQueryOptions = { retry: 3, retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 5000), staleTime: 30_000 };
+
 export type Category = {
   id: string;
   name: string;
   sort_order: number;
   is_active: boolean;
 };
+
+export type PaymentSettings = {
+  account_holder_name: string;
+  account_number: string;
+  payment_window: string;
+};
+
+export function usePaymentSettings() {
+  return useQuery({
+    ...publicQueryOptions,
+    queryKey: ["payment-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_settings")
+        .select("account_holder_name, account_number, payment_window")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? { account_holder_name: "", account_number: "", payment_window: "" }) as PaymentSettings;
+    },
+  });
+}
 
 export type ProductBadge = "none" | "always" | "reservation";
 
@@ -40,6 +64,7 @@ export type ProductAddon = { id: string; product_id: string; addon_id: string };
 
 export function useCategories(includeInactive = false) {
   return useQuery({
+    ...publicQueryOptions,
     queryKey: ["categories", includeInactive],
     queryFn: async () => {
       let query = supabase.from("categories").select("*").order("sort_order");
@@ -53,6 +78,7 @@ export function useCategories(includeInactive = false) {
 
 export function useProducts() {
   return useQuery({
+    ...publicQueryOptions,
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase

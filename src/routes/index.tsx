@@ -168,6 +168,28 @@ function StorePage() {
       <main className="mx-auto max-w-3xl px-4 py-6">
         {categories.isLoading || products.isLoading ? (
           <p className="py-16 text-center text-muted-foreground">جاري تحميل القائمة…</p>
+        ) : categories.isError && categories.data === undefined ? (
+          <div className="py-16 text-center">
+            <p className="text-muted-foreground">تعذّر تحميل الأقسام. قد يكون الاتصال بقاعدة البيانات مؤقتًا.</p>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
+              onClick={() => categories.refetch()}
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        ) : products.isError && products.data === undefined ? (
+          <div className="py-16 text-center">
+            <p className="text-muted-foreground">تعذّر تحميل المنتجات. قد يكون الاتصال مؤقتًا.</p>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
+              onClick={() => products.refetch()}
+            >
+              إعادة المحاولة
+            </button>
+          </div>
         ) : visibleCategories.length === 0 ? (
           <p className="py-16 text-center text-muted-foreground">لا توجد أقسام بعد.</p>
         ) : (
