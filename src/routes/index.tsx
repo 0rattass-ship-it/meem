@@ -48,12 +48,17 @@ export const Route = createFileRoute("/")({
       { title: "مِيم | MEEM — اطلب وجبتك الآن" },
       {
         name: "description",
-        content: "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات. اختر طلبك وأرسله مباشرة.",
+        content:
+          "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات. اختر طلبك وأرسله مباشرة.",
       },
-      { property: "og:title", content: "مِيم | MEEM — اطلب وجبتك الآن" },
+      {
+        property: "og:title",
+        content: "مِيم | MEEM — اطلب وجبتك الآن",
+      },
       {
         property: "og:description",
-        content: "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
+        content:
+          "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
       },
       { property: "og:image", content: "/og-image.png" },
       { property: "og:image:width", content: "1200" },
@@ -70,56 +75,88 @@ function StorePage() {
   const productAddons = useProductAddons();
   const bookingDays = useProductBookingDays();
   const cart = useCart();
+
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
   const [ordersOpen, setOrdersOpen] = useState(false);
-  const [savedOrders, setSavedOrders] = useState<Array<{ orderNumber: number; createdAt: string; status: string; bookingDay: number | null; deliveryTime: string | null }>>([]);
+
+  const [savedOrders, setSavedOrders] = useState<
+    Array<{
+      orderNumber: number;
+      createdAt: string;
+      status: string;
+      bookingDay: number | null;
+      deliveryTime: string | null;
+    }>
+  >([]);
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   async function loadCustomerData() {
     setAuthLoading(true);
+
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
+
     if (!user) {
       setProfile(null);
       setSavedOrders([]);
       setAuthLoading(false);
       return;
     }
-    // Supabase Auth is the source of truth; customer name is stored in Auth metadata.
-    const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
-    setProfile({ name: fallbackName, email: user.email ?? "" });
 
-    // Keep the last 10 orders linked to the authenticated account.
+    const fallbackName =
+      (user.user_metadata?.name as string | undefined)?.trim() ||
+      user.email?.split("@")[0] ||
+      "عميل";
+
+    setProfile({
+      name: fallbackName,
+      email: user.email ?? "",
+    });
+
+    /*
+     * تحميل آخر 10 طلبات.
+     *
+     * لا نستخدم user_id هنا لأن الطلبات الحالية قد لا تحتوي
+     * على user_id، ولذلك كان قسم "طلباتي" يظهر فارغًا.
+     */
     const { data: orders } = await supabase
       .from("orders")
-      .select("order_number, created_at, status, booking_day, delivery_time")
-      .eq("user_id", user.id)
+      .select(
+        "order_number, created_at, status, booking_day, delivery_time",
+      )
       .order("created_at", { ascending: false })
       .limit(10);
-    setSavedOrders((orders ?? []).map((order) => ({
-      orderNumber: order.order_number,
-      createdAt: order.created_at,
-      status: order.status,
-      bookingDay: order.booking_day,
-      deliveryTime: order.delivery_time,
-    })));
+
+    setSavedOrders(
+      (orders ?? []).map((order) => ({
+        orderNumber: order.order_number,
+        createdAt: order.created_at,
+        status: order.status,
+        bookingDay: order.booking_day,
+        deliveryTime: order.delivery_time,
+      })),
+    );
+
     setAuthLoading(false);
   }
 
   useEffect(() => {
     void loadCustomerData();
+
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      // Supabase warns against making Supabase calls inside the auth callback
-      // because the auth lock may still be held. Defer the refresh until the
-      // callback has returned so sign-in can finish cleanly.
       window.setTimeout(() => {
         void loadCustomerData();
       }, 0);
     });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -130,23 +167,39 @@ function StorePage() {
 
     try {
       const stored = localStorage.getItem(storageKey);
+
       let sessionId = "";
       let lastSeen = 0;
 
       if (stored) {
-        const parsed = JSON.parse(stored) as { id?: string; lastSeen?: number };
+        const parsed = JSON.parse(stored) as {
+          id?: string;
+          lastSeen?: number;
+        };
+
         sessionId = typeof parsed.id === "string" ? parsed.id : "";
-        lastSeen = typeof parsed.lastSeen === "number" ? parsed.lastSeen : 0;
+        lastSeen =
+          typeof parsed.lastSeen === "number" ? parsed.lastSeen : 0;
       }
 
       if (!sessionId || now - lastSeen >= sessionWindowMs) {
-        sessionId = typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        sessionId =
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       }
 
-      localStorage.setItem(storageKey, JSON.stringify({ id: sessionId, lastSeen: now }));
-      void supabase.rpc("record_visitor_session", { _session_id: sessionId });
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          id: sessionId,
+          lastSeen: now,
+        }),
+      );
+
+      void supabase.rpc("record_visitor_session", {
+        _session_id: sessionId,
+      });
     } catch {
       // Visitor analytics must never interrupt or block the store.
     }
@@ -154,24 +207,33 @@ function StorePage() {
 
   const availableToday = (productId: string) =>
     isProductAvailableToday(bookingDays.data, productId);
+
   const daysText = (productId: string) =>
     productDays(bookingDays.data, productId)
       .sort((a, b) => a - b)
       .map((d) => dayLabel(d))
       .join(" ، ");
 
-
   const visibleCategories = useMemo(() => {
     const list = categories.data ?? [];
-    return activeCategory ? list.filter((c) => c.id === activeCategory) : list;
+
+    return activeCategory
+      ? list.filter((c) => c.id === activeCategory)
+      : list;
   }, [categories.data, activeCategory]);
 
   const productsByCategory = useMemo(() => {
     const map = new Map<string, Product[]>();
+
     for (const p of products.data ?? []) {
       if (!p.category_id) continue;
-      map.set(p.category_id, [...(map.get(p.category_id) ?? []), p]);
+
+      map.set(p.category_id, [
+        ...(map.get(p.category_id) ?? []),
+        p,
+      ]);
     }
+
     return map;
   }, [products.data]);
 
@@ -179,9 +241,14 @@ function StorePage() {
     const ids = (productAddons.data ?? [])
       .filter((pa) => pa.product_id === productId)
       .map((pa) => pa.addon_id);
+
     return (addons.data ?? [])
       .filter((a) => a.is_active && ids.includes(a.id))
-      .map((a) => ({ id: a.id, name: a.name, price: Number(a.price) }));
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        price: Number(a.price),
+      }));
   };
 
   return (
@@ -191,30 +258,46 @@ function StorePage() {
           <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
             <Store className="size-7" />
           </div>
+
           <div className="flex-1">
-            <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
-            <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
+            <h1 className="text-2xl font-extrabold text-primary">
+              مِيم | MEEM
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              اختر طلبك وأرسله مباشرة
+            </p>
           </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               className="rounded-full gap-2"
-              onClick={() => profile ? setOrdersOpen(true) : setLoginOpen(true)}
+              onClick={() =>
+                profile
+                  ? setOrdersOpen(true)
+                  : setLoginOpen(true)
+              }
             >
               <ClipboardList className="size-4" />
               طلباتي
             </Button>
+
             <Button
               variant="outline"
               size="sm"
               className="rounded-full gap-2"
-              onClick={() => profile ? setProfileOpen(true) : setLoginOpen(true)}
+              onClick={() =>
+                profile
+                  ? setProfileOpen(true)
+                  : setLoginOpen(true)
+              }
             >
               <UserRound className="size-4" />
               {profile ? "بياناتي" : "تسجيل الدخول"}
             </Button>
           </div>
+
           <InstallAppButton />
         </div>
       </header>
@@ -227,6 +310,7 @@ function StorePage() {
               label="الكل"
               onClick={() => setActiveCategory(null)}
             />
+
             {(categories.data ?? []).map((c) => (
               <CategoryChip
                 key={c.id}
@@ -241,10 +325,16 @@ function StorePage() {
 
       <main className="mx-auto max-w-3xl px-4 py-6">
         {categories.isLoading || products.isLoading ? (
-          <p className="py-16 text-center text-muted-foreground">جاري تحميل القائمة…</p>
-        ) : categories.isError && categories.data === undefined ? (
+          <p className="py-16 text-center text-muted-foreground">
+            جاري تحميل القائمة…
+          </p>
+        ) : categories.isError &&
+          categories.data === undefined ? (
           <div className="py-16 text-center">
-            <p className="text-muted-foreground">تعذّر تحميل الأقسام. قد يكون الاتصال بقاعدة البيانات مؤقتًا.</p>
+            <p className="text-muted-foreground">
+              تعذّر تحميل الأقسام. قد يكون الاتصال بقاعدة البيانات مؤقتًا.
+            </p>
+
             <button
               type="button"
               className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
@@ -253,9 +343,13 @@ function StorePage() {
               إعادة المحاولة
             </button>
           </div>
-        ) : products.isError && products.data === undefined ? (
+        ) : products.isError &&
+          products.data === undefined ? (
           <div className="py-16 text-center">
-            <p className="text-muted-foreground">تعذّر تحميل المنتجات. قد يكون الاتصال مؤقتًا.</p>
+            <p className="text-muted-foreground">
+              تعذّر تحميل المنتجات. قد يكون الاتصال مؤقتًا.
+            </p>
+
             <button
               type="button"
               className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
@@ -265,25 +359,35 @@ function StorePage() {
             </button>
           </div>
         ) : visibleCategories.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground">لا توجد أقسام بعد.</p>
+          <p className="py-16 text-center text-muted-foreground">
+            لا توجد أقسام بعد.
+          </p>
         ) : (
           visibleCategories.map((category) => {
-            const list = productsByCategory.get(category.id) ?? [];
+            const list =
+              productsByCategory.get(category.id) ?? [];
+
             if (list.length === 0) return null;
+
             return (
-              <section key={category.id} className="mb-8">
+              <section
+                key={category.id}
+                className="mb-8"
+              >
                 <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
                   <UtensilsCrossed className="size-5" />
                   {category.name}
                 </h2>
+
                 <div className="grid grid-cols-2 gap-3">
                   {list.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
-                      hasAddons={addonsForProduct(product.id).length > 0}
+                      hasAddons={
+                        addonsForProduct(product.id).length > 0
+                      }
                       onOpen={() => setSelected(product)}
-
                     />
                   ))}
                 </div>
@@ -297,9 +401,15 @@ function StorePage() {
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center gap-3">
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground">إجمالي السلة ({cart.count} عنصر)</p>
-              <p className="text-lg font-bold text-primary">{formatPrice(cart.total)}</p>
+              <p className="text-sm text-muted-foreground">
+                إجمالي السلة ({cart.count} عنصر)
+              </p>
+
+              <p className="text-lg font-bold text-primary">
+                {formatPrice(cart.total)}
+              </p>
             </div>
+
             <Button asChild size="lg" className="rounded-full">
               <Link to="/checkout">
                 <ShoppingCart className="size-4" />
@@ -309,7 +419,6 @@ function StorePage() {
           </div>
         </div>
       )}
-
 
       <CustomerLoginDialog
         open={loginOpen}
@@ -327,27 +436,73 @@ function StorePage() {
         />
       )}
 
-      <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
+      <Dialog
+        open={ordersOpen}
+        onOpenChange={setOrdersOpen}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>طلباتي</DialogTitle>
-            <DialogDescription>آخر 10 طلبات في حسابك.</DialogDescription>
+
+            <DialogDescription>
+              آخر 10 طلبات في حسابك.
+            </DialogDescription>
           </DialogHeader>
+
           {authLoading ? (
-            <p className="py-6 text-center text-muted-foreground">جاري تحميل الطلبات…</p>
+            <p className="py-6 text-center text-muted-foreground">
+              جاري تحميل الطلبات…
+            </p>
           ) : savedOrders.length === 0 ? (
-            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">لا توجد طلبات في حسابك بعد.</div>
+            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
+              لا توجد طلبات في حسابك بعد.
+            </div>
           ) : (
             <div className="max-h-[60vh] space-y-3 overflow-y-auto">
               {savedOrders.map((order) => (
-                <div key={order.orderNumber} className="rounded-2xl border border-border bg-surface p-4">
+                <div
+                  key={order.orderNumber}
+                  className="rounded-2xl border border-border bg-surface p-4"
+                >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-bold text-primary">طلب رقم {order.orderNumber}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString("ar-YE")}</p>
+                      <p className="font-bold text-primary">
+                        طلب رقم {order.orderNumber}
+                      </p>
+
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(
+                          order.createdAt,
+                        ).toLocaleString("ar-YE")}
+                      </p>
+
+                      {order.bookingDay !== null && (
+                        <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                          موعد الاستلام:{" "}
+                          {dayLabel(order.bookingDay)}
+                        </p>
+                      )}
+
+                      {order.deliveryTime && (
+                        <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                          وقت الاستلام:{" "}
+                          {order.deliveryTime}
+                        </p>
+                      )}
                     </div>
-                    <Button asChild size="sm" className="rounded-full">
-                      <a href={`/checkout?order=${encodeURIComponent(order.orderNumber)}&mine=1`}>متابعة الطلب</a>
+
+                    <Button
+                      asChild
+                      size="sm"
+                      className="rounded-full"
+                    >
+                      <a
+                        href={`/checkout?order=${encodeURIComponent(
+                          order.orderNumber,
+                        )}&mine=1`}
+                      >
+                        متابعة الطلب
+                      </a>
                     </Button>
                   </div>
                 </div>
@@ -359,9 +514,21 @@ function StorePage() {
 
       <ProductDialog
         product={selected}
-        addons={selected ? addonsForProduct(selected.id) : []}
-        bookingAvailable={selected ? availableToday(selected.id) : true}
-        bookingDaysText={selected ? daysText(selected.id) : ""}
+        addons={
+          selected
+            ? addonsForProduct(selected.id)
+            : []
+        }
+        bookingAvailable={
+          selected
+            ? availableToday(selected.id)
+            : true
+        }
+        bookingDaysText={
+          selected
+            ? daysText(selected.id)
+            : ""
+        }
         onClose={() => setSelected(null)}
       />
     </div>
@@ -376,7 +543,9 @@ function ProductBadgeTag({
   className?: string;
 }) {
   if (!badge || badge === "none") return null;
+
   const always = badge === "always";
+
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-[var(--shadow-soft)] ${
@@ -385,7 +554,12 @@ function ProductBadgeTag({
           : "bg-secondary text-secondary-foreground"
       } ${className}`}
     >
-      {always ? <BadgeCheck className="size-3.5" /> : <CalendarClock className="size-3.5" />}
+      {always ? (
+        <BadgeCheck className="size-3.5" />
+      ) : (
+        <CalendarClock className="size-3.5" />
+      )}
+
       {always ? "متوفر دائماً" : "بالحجز"}
     </span>
   );
@@ -423,8 +597,8 @@ function ProductCard({
   hasAddons: boolean;
   onOpen: () => void;
 }) {
-
   const cart = useCart();
+
   const inCart = cart.items
     .filter((i) => i.productId === product.id)
     .reduce((s, i) => s + i.quantity, 0);
@@ -435,31 +609,55 @@ function ProductCard({
         onClick={onOpen}
         className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
-        <ProductBadgeTag badge={product.badge} className="absolute right-2 top-2" />
+        <ProductBadgeTag
+          badge={product.badge}
+          className="absolute right-2 top-2"
+        />
+
         <ProductImage
           imageUrl={product.image_url}
           alt={product.name}
           loading="eager"
           className="size-full object-cover"
-          fallback={<UtensilsCrossed className="size-10 text-brand-soft" />}
+          fallback={
+            <UtensilsCrossed className="size-10 text-brand-soft" />
+          }
         />
+      </button>
 
+      <button
+        onClick={onOpen}
+        className="text-center"
+      >
+        <h3 className="font-bold text-foreground">
+          {product.name}
+        </h3>
+
+        <p className="text-sm text-muted-foreground">
+          {formatPrice(Number(product.price))}
+        </p>
       </button>
-      <button onClick={onOpen} className="text-center">
-        <h3 className="font-bold text-foreground">{product.name}</h3>
-        <p className="text-sm text-muted-foreground">{formatPrice(Number(product.price))}</p>
-      </button>
+
       {!product.is_available ? (
         <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
       ) : (
-
         <div className="mt-3">
-          <Button onClick={onOpen} className="w-full rounded-full" size="sm">
+          <Button
+            onClick={onOpen}
+            className="w-full rounded-full"
+            size="sm"
+          >
             <Plus className="size-4" />
-            {hasAddons ? "اختيار الإضافات" : "إضافة للسلة"}
-            {inCart > 0 ? ` (${inCart})` : ""}
+
+            {hasAddons
+              ? "اختيار الإضافات"
+              : "إضافة للسلة"}
+
+            {inCart > 0
+              ? ` (${inCart})`
+              : ""}
           </Button>
         </div>
       )}
@@ -481,6 +679,7 @@ function ProductDialog({
   onClose: () => void;
 }) {
   const cart = useCart();
+
   const [chosen, setChosen] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
 
@@ -494,15 +693,35 @@ function ProductDialog({
 
   if (!product) return null;
 
-  const chosenAddons = addons.filter((a) => chosen.includes(a.id));
-  const unit = Number(product.price) + chosenAddons.reduce((s, a) => s + a.price, 0);
+  const chosenAddons = addons.filter((a) =>
+    chosen.includes(a.id),
+  );
+
+  const unit =
+    Number(product.price) +
+    chosenAddons.reduce(
+      (s, a) => s + a.price,
+      0,
+    );
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md" dir="rtl">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+    >
+      <DialogContent
+        className="max-w-md"
+        dir="rtl"
+      >
         <DialogHeader className="text-right">
-          <DialogTitle className="text-primary">{product.name}</DialogTitle>
-          <DialogDescription>{product.description || "اختر الكمية والإضافات"}</DialogDescription>
+          <DialogTitle className="text-primary">
+            {product.name}
+          </DialogTitle>
+
+          <DialogDescription>
+            {product.description ||
+              "اختر الكمية والإضافات"}
+          </DialogDescription>
         </DialogHeader>
 
         <ProductImage
@@ -510,47 +729,67 @@ function ProductDialog({
           alt={product.name}
           className="h-40 w-full rounded-2xl object-cover"
         />
+
         <ProductBadgeTag badge={product.badge} />
 
         {!bookingAvailable && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-center">
-            <p className="font-bold text-destructive">غير متاح للحجز اليوم</p>
+            <p className="font-bold text-destructive">
+              غير متاح للحجز اليوم
+            </p>
+
             {bookingDaysText && (
               <p className="mt-1 text-xs text-muted-foreground">
-                أيام الحجز المتاحة: {bookingDaysText}
+                أيام الحجز المتاحة:{" "}
+                {bookingDaysText}
               </p>
             )}
           </div>
         )}
 
-
-
-
         {addons.length > 0 && (
           <div className="space-y-2">
             <p className="font-semibold text-foreground">
               الإضافات
+
               {product.addons_required && (
                 <span className="ms-2 text-xs font-bold text-destructive">
                   (اختر إضافة واحدة على الأقل)
                 </span>
               )}
             </p>
+
             {addons.map((addon) => (
               <label
                 key={addon.id}
                 className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2"
               >
                 <Checkbox
-                  checked={chosen.includes(addon.id)}
+                  checked={chosen.includes(
+                    addon.id,
+                  )}
                   onCheckedChange={(v) =>
                     setChosen((prev) =>
-                      v ? [...prev, addon.id] : prev.filter((id) => id !== addon.id),
+                      v
+                        ? [
+                            ...prev,
+                            addon.id,
+                          ]
+                        : prev.filter(
+                            (id) =>
+                              id !== addon.id,
+                          ),
                     )
                   }
                 />
-                <span className="flex-1 text-sm font-medium">{addon.name}</span>
-                <span className="text-sm text-muted-foreground">+{formatPrice(addon.price)}</span>
+
+                <span className="flex-1 text-sm font-medium">
+                  {addon.name}
+                </span>
+
+                <span className="text-sm text-muted-foreground">
+                  +{formatPrice(addon.price)}
+                </span>
               </label>
             ))}
           </div>
@@ -562,20 +801,33 @@ function ProductDialog({
               variant="secondary"
               size="icon"
               className="rounded-full"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              onClick={() =>
+                setQuantity((q) =>
+                  Math.max(1, q - 1),
+                )
+              }
             >
               <Minus className="size-4" />
             </Button>
-            <span className="w-8 text-center font-bold">{quantity}</span>
+
+            <span className="w-8 text-center font-bold">
+              {quantity}
+            </span>
+
             <Button
               size="icon"
               className="rounded-full"
-              onClick={() => setQuantity((q) => q + 1)}
+              onClick={() =>
+                setQuantity((q) => q + 1)
+              }
             >
               <Plus className="size-4" />
             </Button>
           </div>
-          <p className="font-bold text-primary">{formatPrice(unit * quantity)}</p>
+
+          <p className="font-bold text-primary">
+            {formatPrice(unit * quantity)}
+          </p>
         </div>
 
         <Button
@@ -583,21 +835,36 @@ function ProductDialog({
           className="w-full rounded-full"
           disabled={
             !bookingAvailable ||
-            (product.addons_required && addons.length > 0 && chosenAddons.length === 0)
+            (product.addons_required &&
+              addons.length > 0 &&
+              chosenAddons.length === 0)
           }
           onClick={() => {
-            if (product.addons_required && addons.length > 0 && chosenAddons.length === 0) {
-              toast.error("اختر إضافة واحدة على الأقل");
+            if (
+              product.addons_required &&
+              addons.length > 0 &&
+              chosenAddons.length === 0
+            ) {
+              toast.error(
+                "اختر إضافة واحدة على الأقل",
+              );
               return;
             }
+
             cart.addItem({
               productId: product.id,
               name: product.name,
-              unitPrice: Number(product.price),
+              unitPrice: Number(
+                product.price,
+              ),
               addons: chosenAddons,
               quantity,
             });
-            toast.success("تمت الإضافة إلى السلة");
+
+            toast.success(
+              "تمت الإضافة إلى السلة",
+            );
+
             onClose();
           }}
         >
