@@ -55,14 +55,9 @@ export function CustomerLoginDialog({
         toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
         return;
       }
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      if (user) {
-        const { data: existing } = await supabase.from("customer_profiles").select("name").eq("user_id", user.id).maybeSingle();
-        if (!existing) {
-          const { error: profileError } = await supabase.from("customer_profiles").upsert({ user_id: user.id, name: cleanName || user.user_metadata?.name || "عميل", phone: null }, { onConflict: "user_id" });
-          if (profileError) console.error(profileError);
-        }
+      // The Supabase Auth session is the source of truth. Do not block login on a separate profile table.
+      if (name.trim()) {
+        await supabase.auth.updateUser({ data: { name: name.trim() } });
       }
       setBusy(false);
       toast.success("تم تسجيل الدخول");
@@ -86,12 +81,6 @@ export function CustomerLoginDialog({
     }
 
     if (data.user && data.session) {
-      const { error: profileError } = await supabase.from("customer_profiles").upsert({ user_id: data.user.id, name: cleanName, phone: null }, { onConflict: "user_id" });
-      if (profileError) {
-        setBusy(false);
-        toast.error("تم إنشاء الحساب لكن تعذر حفظ الاسم، حاول من بياناتي");
-        return;
-      }
       setBusy(false);
       toast.success("تم إنشاء حسابك وتسجيل الدخول");
       onLoggedIn?.();

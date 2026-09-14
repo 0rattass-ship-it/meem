@@ -97,9 +97,8 @@ function CheckoutPage() {
       setCustomerProfile(null);
       return;
     }
-    const { data: row } = await supabase.from("customer_profiles").select("name").eq("user_id", user.id).maybeSingle();
     const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
-    const profile = { name: row?.name || fallbackName, email: user.email ?? "" };
+    const profile = { name: fallbackName, email: user.email ?? "" };
     setCustomerProfile(profile);
     setForm((prev) => ({ ...prev, customer_name: profile.name, customer_phone: "" }));
   }

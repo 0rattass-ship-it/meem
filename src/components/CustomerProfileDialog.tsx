@@ -38,7 +38,7 @@ export function CustomerProfileDialog({
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("customer_profiles").upsert({ user_id: data.user.id, name: trimmed, phone: null }, { onConflict: "user_id" });
+    const { error } = await supabase.auth.updateUser({ data: { name: trimmed } });
     setBusy(false);
     if (error) {
       toast.error("تعذر حفظ الاسم");

@@ -89,16 +89,9 @@ function StorePage() {
       setAuthLoading(false);
       return;
     }
-    // The auth session is the source of truth for whether the customer is signed in.
-    // A missing profile row must not make a successfully signed-in customer look logged out.
-    const { data: profileRow } = await supabase
-      .from("customer_profiles")
-      .select("name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
+    // Supabase Auth is the source of truth; customer name is stored in Auth metadata.
     const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
-    setProfile({ name: profileRow?.name || fallbackName, email: user.email ?? "" });
+    setProfile({ name: fallbackName, email: user.email ?? "" });
 
     // Keep the last 10 orders linked to the authenticated account.
     const { data: orders } = await supabase
