@@ -302,7 +302,3 @@ function StatCard({
 
       <p className="mt-1 text-xl font-extrabold text-primary">
         {value}
-      </p>
-    </div>
-  );
-}
