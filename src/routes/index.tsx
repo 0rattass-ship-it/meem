@@ -8,6 +8,7 @@ import {
   Minus,
   BadgeCheck,
   CalendarClock,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -68,6 +69,23 @@ function StorePage() {
   const cart = useCart();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+  const [savedOrders, setSavedOrders] = useState<Array<{ orderNumber: number; trackingToken: string; createdAt: string }>>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("meem-saved-orders");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setSavedOrders(parsed.filter((item) =>
+          item && Number.isInteger(item.orderNumber) && typeof item.trackingToken === "string"
+        ).slice(0, 10));
+      }
+    } catch {
+      setSavedOrders([]);
+    }
+  }, []);
 
   useEffect(() => {
     const storageKey = "meem-visitor-session";
@@ -141,6 +159,15 @@ function StorePage() {
             <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
             <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full gap-2"
+            onClick={() => setOrdersOpen(true)}
+          >
+            <ClipboardList className="size-4" />
+            طلباتي
+          </Button>
           <InstallAppButton />
         </div>
       </header>
@@ -235,6 +262,38 @@ function StorePage() {
           </div>
         </div>
       )}
+
+      <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>طلباتي</DialogTitle>
+            <DialogDescription>يمكنك متابعة الطلبات المحفوظة على هذا الجهاز.</DialogDescription>
+          </DialogHeader>
+          {savedOrders.length === 0 ? (
+            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
+              لا توجد طلبات محفوظة على هذا الجهاز بعد.
+            </div>
+          ) : (
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+              {savedOrders.map((order) => (
+                <div key={`${order.orderNumber}-${order.trackingToken}`} className="rounded-2xl border border-border bg-surface p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-primary">طلب رقم {order.orderNumber}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString("ar-YE")}</p>
+                    </div>
+                    <Button asChild size="sm" className="rounded-full">
+                      <a href={`/checkout?order=${encodeURIComponent(order.orderNumber)}&token=${encodeURIComponent(order.trackingToken)}`}>
+                        متابعة الطلب
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ProductDialog
         product={selected}

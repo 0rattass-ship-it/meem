@@ -211,6 +211,18 @@ function CheckoutPage() {
     }
     const result = data as { order_number: number; total: number; payment_method: string };
     cart.clear();
+    try {
+      const key = "meem-saved-orders";
+      const existing = JSON.parse(localStorage.getItem(key) ?? "[]");
+      const orders = Array.isArray(existing) ? existing : [];
+      const next = [
+        { orderNumber: result.order_number, trackingToken, createdAt: new Date().toISOString() },
+        ...orders.filter((item) => item?.orderNumber !== result.order_number),
+      ].slice(0, 10);
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      // Saving the tracking link must never block successful order placement.
+    }
     setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
   }
 

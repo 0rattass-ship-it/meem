@@ -316,8 +316,6 @@ export function normalizedOrderStatus(status: string): string {
   return LEGACY_STATUS_MAP[status] ?? status;
 }
 
-export type OrderStatus = (typeof ORDER_STATUSES)[number]["value"];
-
 export function statusLabel(status: string) {
   const normalized = normalizedOrderStatus(status);
   return ORDER_STATUSES.find((s) => s.value === normalized)?.label ?? status;
