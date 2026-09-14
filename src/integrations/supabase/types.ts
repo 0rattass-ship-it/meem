@@ -555,7 +555,7 @@ export type Database = {
       place_order_with_payment: {
         Args: {
           _customer_name: string
-          _customer_phone: string
+          _customer_phone: string | null
           _address: string
           _notes: string
           _items: Json

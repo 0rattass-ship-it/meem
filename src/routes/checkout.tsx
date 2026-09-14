@@ -219,7 +219,7 @@ function CheckoutPage() {
     setSending(true);
     const { data, error } = await supabase.rpc("place_order_with_payment", {
       _customer_name: parsed.data.customer_name,
-      _customer_phone: parsed.data.customer_phone,
+      _customer_phone: parsed.data.customer_phone?.trim() || null,
       _address: parsed.data.address ?? "",
       _notes: parsed.data.notes ?? "",
       _payment_method: paymentMethod,
