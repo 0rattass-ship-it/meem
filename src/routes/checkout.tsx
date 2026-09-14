@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Minus, Plus, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CustomerLoginDialog } from "@/components/CustomerLoginDialog";
 import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
 import {
   commonBookingDays,
@@ -52,7 +53,7 @@ export const Route = createFileRoute("/checkout")({
 
 const schema = z.object({
   customer_name: z.string().trim().min(2, "الاسم مطلوب").max(80),
-  customer_phone: z.string().trim().min(6, "رقم الجوال مطلوب").max(20),
+  customer_phone: z.string().trim().max(20).optional(),
   address: z.string().trim().max(200).optional(),
   notes: z.string().trim().max(300).optional(),
 });
@@ -65,6 +66,8 @@ type TrackedOrder = {
   payment_method: string;
   payment_status: string;
   payment_window: string | null;
+  booking_day: number | null;
+  delivery_time: string | null;
   created_at: string;
 };
 
@@ -72,6 +75,8 @@ function CheckoutPage() {
   const cart = useCart();
   const navigate = useNavigate();
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", notes: "" });
+  const [customerProfile, setCustomerProfile] = useState<{ name: string; email: string } | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [deliveryTimeId, setDeliveryTimeId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [sending, setSending] = useState(false);
@@ -84,6 +89,25 @@ function CheckoutPage() {
   const productBookingDays = useProductBookingDays();
   const productTimes = useProductDeliveryTimes();
   const paymentSettings = usePaymentSettings();
+
+  async function loadCustomerProfile() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) {
+      setCustomerProfile(null);
+      return;
+    }
+    const { data: row } = await supabase.from("customer_profiles").select("name").eq("user_id", user.id).maybeSingle();
+    if (row?.name) {
+      const profile = { name: row.name, email: user.email ?? "" };
+      setCustomerProfile(profile);
+      setForm((prev) => ({ ...prev, customer_name: profile.name, customer_phone: "" }));
+    }
+  }
+
+  useEffect(() => {
+    void loadCustomerProfile();
+  }, []);
 
   const locationOptions = locations.data ?? [];
   const productIds = useMemo(
@@ -133,12 +157,15 @@ function CheckoutPage() {
     const params = new URLSearchParams(window.location.search);
     const orderNumber = Number(params.get("order"));
     const token = params.get("token") ?? "";
-    if (!Number.isInteger(orderNumber) || orderNumber <= 0 || token.length < 32) return;
+    const mine = params.get("mine") === "1";
+    if (!Number.isInteger(orderNumber) || orderNumber <= 0 || (!mine && token.length < 32)) return;
 
     let cancelled = false;
     setTracking({ loading: true, data: null, error: false });
-    supabase.rpc("get_order_tracking", { _order_number: orderNumber, _tracking_token: token })
-      .then(({ data, error }) => {
+    const request = mine
+      ? supabase.rpc("get_my_order_tracking", { _order_number: orderNumber })
+      : supabase.rpc("get_order_tracking", { _order_number: orderNumber, _tracking_token: token });
+    request.then(({ data, error }) => {
         if (cancelled) return;
         const row = Array.isArray(data) ? data[0] : data;
         setTracking({ loading: false, data: error || !row ? null : (row as TrackedOrder), error: Boolean(error || !row) });
@@ -153,6 +180,12 @@ function CheckoutPage() {
   }
 
   async function submit() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session?.user) {
+      setLoginOpen(true);
+      toast.error("سجّل الدخول بحسابك أولًا");
+      return;
+    }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "تحقق من البيانات");
@@ -210,19 +243,8 @@ function CheckoutPage() {
       return;
     }
     const result = data as { order_number: number; total: number; payment_method: string };
+    setCustomerProfile({ name: parsed.data.customer_name, email: (await supabase.auth.getUser()).data.user?.email ?? "" });
     cart.clear();
-    try {
-      const key = "meem-saved-orders";
-      const existing = JSON.parse(localStorage.getItem(key) ?? "[]");
-      const orders = Array.isArray(existing) ? existing : [];
-      const next = [
-        { orderNumber: result.order_number, trackingToken, createdAt: new Date().toISOString() },
-        ...orders.filter((item) => item?.orderNumber !== result.order_number),
-      ].slice(0, 10);
-      localStorage.setItem(key, JSON.stringify(next));
-    } catch {
-      // Saving the tracking link must never block successful order placement.
-    }
     setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
   }
 
@@ -272,7 +294,15 @@ function CheckoutPage() {
               <p className="mt-3 text-center text-sm font-semibold text-primary">
                 الحالة الحالية: {statusLabel(tracking.data.status)}
               </p>
-              <p className="mt-2 text-center text-sm text-muted-foreground">
+              <div className="mt-4 rounded-2xl bg-surface p-4 text-center text-sm">
+                <p className="font-bold text-primary">📅 موعد الاستلام</p>
+                <p className="mt-1 font-semibold">{dayLabel(tracking.data.booking_day) || "غير محدد"}</p>
+                {tracking.data.delivery_time && (
+                  <p className="mt-1 text-muted-foreground">وقت الاستلام: {tracking.data.delivery_time}</p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">يرجى الحضور في يوم ووقت الاستلام المحددين أعلاه.</p>
+              </div>
+              <p className="mt-3 text-center text-sm text-muted-foreground">
                 المبلغ: {formatPrice(Number(tracking.data.total))}
               </p>
               <Button className="mt-6 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
@@ -317,7 +347,7 @@ function CheckoutPage() {
             <div className="mt-4 rounded-2xl bg-surface p-4 text-sm">
               <p className="font-bold text-primary">الدفع في المشرب</p>
               <p className="mt-1">وقت الدفع: {paymentSettings.data?.payment_window}</p>
-              <p className="mt-2 text-xs text-muted-foreground">يبقى الطلب بانتظار الدفع حتى يتم تأكيده يدويًا.</p>
+              <p className="mt-2 text-xs text-muted-foreground">يتم الدفع في نفس يوم الحجز، خلال الأوقات الموضحة أعلاه، عند حضورك للمشرب.</p>
             </div>
           )}
           <a
@@ -335,7 +365,13 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-10">
+    <>
+      <CustomerLoginDialog
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onLoggedIn={() => void loadCustomerProfile()}
+      />
+      <div className="min-h-screen bg-background pb-10">
       <header className="border-b border-border bg-card/80 px-4 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <Button asChild variant="ghost" size="icon" className="rounded-full">
@@ -407,25 +443,29 @@ function CheckoutPage() {
 
         <section className="card-soft space-y-4 p-4">
           <h2 className="font-bold text-foreground">بيانات العميل</h2>
-          <div className="space-y-2">
-            <Label htmlFor="name">الاسم</Label>
-            <Input
-              id="name"
-              value={form.customer_name}
-              maxLength={80}
-              onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">رقم الجوال</Label>
-            <Input
-              id="phone"
-              inputMode="tel"
-              value={form.customer_phone}
-              maxLength={20}
-              onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
-            />
-          </div>
+          {customerProfile ? (
+            <div className="rounded-2xl bg-surface p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <UserRound className="size-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-foreground">{customerProfile.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground" dir="ltr">{customerProfile.email}</p>
+                </div>
+                <Link to="/" className="text-sm font-semibold text-primary underline underline-offset-4">
+                  تعديل
+                </Link>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">بيانات حسابك محفوظة، ولن تحتاج لكتابتها مرة أخرى.</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-2xl bg-surface p-3 text-sm text-muted-foreground">
+                سجّل الدخول أولًا، وسيتم استخدام اسمك المحفوظ في حسابك للطلب.
+              </div>
+            </>
+          )}
           <div className="space-y-2">
             <Label htmlFor="address">العنوان (اختياري)</Label>
             <Input
@@ -481,7 +521,7 @@ function CheckoutPage() {
               ) : (
                 <p className="mt-2">وقت الدفع: <span className="font-semibold">{paymentSettings.data?.payment_window || "غير محدد"}</span></p>
               )}
-              <p className="mt-2 text-xs text-muted-foreground">أدخل اسمك في بيانات العميل أعلاه، ثم ادفع المبلغ عند حضورك للمشرب.</p>
+              <p className="mt-2 text-xs text-muted-foreground">يتم الدفع في نفس يوم الحجز، خلال أوقات الدفع الموضحة أعلاه، عند حضورك للمشرب.</p>
             </div>
           )}
         </section>
@@ -570,6 +610,7 @@ function CheckoutPage() {
         </section>
 
       </main>
-    </div>
+      </div>
+    </>
   );
 }

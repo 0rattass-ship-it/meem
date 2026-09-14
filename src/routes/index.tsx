@@ -9,6 +9,7 @@ import {
   BadgeCheck,
   CalendarClock,
   ClipboardList,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +26,8 @@ import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
 import { ProductImage } from "@/lib/product-image";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { supabase } from "@/integrations/supabase/client";
+import { CustomerLoginDialog } from "@/components/CustomerLoginDialog";
+import { CustomerProfileDialog } from "@/components/CustomerProfileDialog";
 
 import {
   dayLabel,
@@ -70,21 +73,51 @@ function StorePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Product | null>(null);
   const [ordersOpen, setOrdersOpen] = useState(false);
-  const [savedOrders, setSavedOrders] = useState<Array<{ orderNumber: number; trackingToken: string; createdAt: string }>>([]);
+  const [savedOrders, setSavedOrders] = useState<Array<{ orderNumber: number; createdAt: string; status: string; bookingDay: number | null; deliveryTime: string | null }>>([]);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  async function loadCustomerData() {
+    setAuthLoading(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) {
+      setProfile(null);
+      setSavedOrders([]);
+      setAuthLoading(false);
+      return;
+    }
+    const { data: profileRow } = await supabase
+      .from("customer_profiles")
+      .select("name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setProfile(profileRow ? { name: profileRow.name, email: user.email ?? "" } : null);
+
+    const { data: orders } = await supabase
+      .from("orders")
+      .select("order_number, created_at, status, booking_day, delivery_time")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setSavedOrders((orders ?? []).map((order) => ({
+      orderNumber: order.order_number,
+      createdAt: order.created_at,
+      status: order.status,
+      bookingDay: order.booking_day,
+      deliveryTime: order.delivery_time,
+    })));
+    setAuthLoading(false);
+  }
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("meem-saved-orders");
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        setSavedOrders(parsed.filter((item) =>
-          item && Number.isInteger(item.orderNumber) && typeof item.trackingToken === "string"
-        ).slice(0, 10));
-      }
-    } catch {
-      setSavedOrders([]);
-    }
+    void loadCustomerData();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      void loadCustomerData();
+    });
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -159,15 +192,26 @@ function StorePage() {
             <h1 className="text-2xl font-extrabold text-primary">مِيم | MEEM</h1>
             <p className="text-sm text-muted-foreground">اختر طلبك وأرسله مباشرة</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full gap-2"
-            onClick={() => setOrdersOpen(true)}
-          >
-            <ClipboardList className="size-4" />
-            طلباتي
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-2"
+              onClick={() => profile ? setOrdersOpen(true) : setLoginOpen(true)}
+            >
+              <ClipboardList className="size-4" />
+              طلباتي
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-2"
+              onClick={() => profile ? setProfileOpen(true) : setLoginOpen(true)}
+            >
+              <UserRound className="size-4" />
+              {profile ? "بياناتي" : "تسجيل الدخول"}
+            </Button>
+          </div>
           <InstallAppButton />
         </div>
       </header>
@@ -263,29 +307,44 @@ function StorePage() {
         </div>
       )}
 
+
+      <CustomerLoginDialog
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onLoggedIn={() => void loadCustomerData()}
+      />
+
+      {profile && (
+        <CustomerProfileDialog
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          initialName={profile.name}
+          email={profile.email}
+          onSaved={(saved) => setProfile(saved)}
+        />
+      )}
+
       <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>طلباتي</DialogTitle>
-            <DialogDescription>يمكنك متابعة الطلبات المحفوظة على هذا الجهاز.</DialogDescription>
+            <DialogDescription>آخر 10 طلبات في حسابك.</DialogDescription>
           </DialogHeader>
-          {savedOrders.length === 0 ? (
-            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
-              لا توجد طلبات محفوظة على هذا الجهاز بعد.
-            </div>
+          {authLoading ? (
+            <p className="py-6 text-center text-muted-foreground">جاري تحميل الطلبات…</p>
+          ) : savedOrders.length === 0 ? (
+            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">لا توجد طلبات في حسابك بعد.</div>
           ) : (
             <div className="max-h-[60vh] space-y-3 overflow-y-auto">
               {savedOrders.map((order) => (
-                <div key={`${order.orderNumber}-${order.trackingToken}`} className="rounded-2xl border border-border bg-surface p-4">
+                <div key={order.orderNumber} className="rounded-2xl border border-border bg-surface p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-bold text-primary">طلب رقم {order.orderNumber}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString("ar-YE")}</p>
                     </div>
                     <Button asChild size="sm" className="rounded-full">
-                      <a href={`/checkout?order=${encodeURIComponent(order.orderNumber)}&token=${encodeURIComponent(order.trackingToken)}`}>
-                        متابعة الطلب
-                      </a>
+                      <a href={`/checkout?order=${encodeURIComponent(order.orderNumber)}&mine=1`}>متابعة الطلب</a>
                     </Button>
                   </div>
                 </div>

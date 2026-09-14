@@ -203,13 +203,34 @@ export type Database = {
           },
         ]
       }
+      customer_profiles: {
+        Row: {
+          user_id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string | null
           booking_day: number | null
           created_at: string
           customer_name: string
-          customer_phone: string
+          customer_phone: string | null
           delivery_location: string | null
           delivery_time: string | null
           id: string
@@ -219,6 +240,7 @@ export type Database = {
           payment_status: string
           payment_window: string | null
           tracking_token_hash: string | null
+          user_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at: string
@@ -228,7 +250,7 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name: string
-          customer_phone: string
+          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
@@ -238,6 +260,7 @@ export type Database = {
           payment_status?: string
           payment_window?: string | null
           tracking_token_hash?: string | null
+          user_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
@@ -247,7 +270,7 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name?: string
-          customer_phone?: string
+          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
@@ -257,6 +280,7 @@ export type Database = {
           payment_status?: string
           payment_window?: string | null
           tracking_token_hash?: string | null
+          user_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
@@ -494,6 +518,23 @@ export type Database = {
       get_admin_statistics: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_my_order_tracking: {
+        Args: {
+          _order_number: number
+        }
+        Returns: {
+          order_number: number
+          customer_name: string
+          total: number
+          status: Database["public"]["Enums"]["order_status"]
+          payment_method: string
+          payment_status: string
+          payment_window: string | null
+          booking_day: number | null
+          delivery_time: string | null
+          created_at: string
+        }[]
       }
       get_order_tracking: {
         Args: {
