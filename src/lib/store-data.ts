@@ -280,17 +280,45 @@ export function nearestCommonDay(
   return null;
 }
 
+/** حالات الطلب التي تظهر للعميل والإدارة.
+ * القيم القديمة تبقى مدعومة حتى لا تتعطل الطلبات الموجودة.
+ */
 export const ORDER_STATUSES = [
-
-  { value: "new", label: "جديد" },
-  { value: "preparing", label: "قيد التجهيز" },
+  { value: "received", label: "تم استلام الطلب" },
+  { value: "reviewing", label: "قيد المراجعة" },
+  { value: "accepted", label: "تم قبول الطلب" },
+  { value: "preparing", label: "جاري التجهيز" },
   { value: "ready", label: "جاهز" },
-  { value: "completed", label: "مكتمل" },
+  { value: "delivered", label: "تم التسليم" },
   { value: "cancelled", label: "ملغي" },
 ] as const;
+
+export const ORDER_STATUS_STEPS = [
+  { value: "received", label: "تم استلام الطلب" },
+  { value: "reviewing", label: "قيد المراجعة" },
+  { value: "accepted", label: "تم قبول الطلب" },
+  { value: "preparing", label: "جاري التجهيز" },
+  { value: "ready", label: "جاهز" },
+  { value: "delivered", label: "تم التسليم" },
+] as const;
+
+const LEGACY_STATUS_MAP: Record<string, string> = {
+  new: "received",
+  preparing: "preparing",
+  ready: "ready",
+  completed: "delivered",
+  cancelled: "cancelled",
+};
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number]["value"];
+
+export function normalizedOrderStatus(status: string): string {
+  return LEGACY_STATUS_MAP[status] ?? status;
+}
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number]["value"];
 
 export function statusLabel(status: string) {
-  return ORDER_STATUSES.find((s) => s.value === status)?.label ?? status;
+  const normalized = normalizedOrderStatus(status);
+  return ORDER_STATUSES.find((s) => s.value === normalized)?.label ?? status;
 }

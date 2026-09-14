@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, type CartAddon } from "@/lib/cart";
-import { ORDER_STATUSES, dayLabel, statusLabel } from "@/lib/store-data";
+import { ORDER_STATUSES, dayLabel, normalizedOrderStatus, statusLabel } from "@/lib/store-data";
 
 type OrderItem = {
   id: string;
@@ -61,7 +61,7 @@ export function OrdersManager() {
   async function confirmPayment(id: string) {
     const { error } = await supabase
       .from("orders")
-      .update({ payment_status: "paid", status: "preparing" })
+      .update({ payment_status: "paid" })
       .eq("id", id);
     if (error) {
       toast.error("تعذّر تأكيد الدفع");
@@ -179,7 +179,7 @@ export function OrdersManager() {
                     تأكيد الدفع / تأكيد الطلب
                   </Button>
                 )}
-                <Select value={order.status} onValueChange={(v) => updateStatus(order.id, v)}>
+                <Select value={normalizedOrderStatus(order.status)} onValueChange={(v) => updateStatus(order.id, v)}>
                   <SelectTrigger className="w-36">
                     <SelectValue />
                   </SelectTrigger>

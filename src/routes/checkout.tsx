@@ -30,6 +30,8 @@ import {
   useProductDeliveryTimes,
   usePaymentSettings,
   statusLabel,
+  normalizedOrderStatus,
+  ORDER_STATUS_STEPS,
 } from "@/lib/store-data";
 
 
@@ -226,12 +228,39 @@ function CheckoutPage() {
               <p className="mt-3 text-muted-foreground">
                 رقم الطلب: <span className="font-bold text-foreground">{tracking.data.order_number}</span>
               </p>
-              <p className="mt-4 rounded-2xl bg-surface p-4 font-bold text-primary">
-                {tracking.data.payment_status === "paid" && tracking.data.status === "preparing"
-                  ? "تم تأكيد طلبك وهو قيد التجهيز."
-                  : statusLabel(tracking.data.status)}
+              {tracking.data.status === "cancelled" ? (
+                <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-center">
+                  <p className="font-bold text-destructive">تم إلغاء الطلب</p>
+                  <p className="mt-1 text-sm text-muted-foreground">للاستفسار، تواصل مع إدارة المشرب.</p>
+                </div>
+              ) : (
+                <div className="mt-5 rounded-2xl bg-surface p-4 text-right">
+                  <p className="mb-4 text-sm font-bold text-primary">حالة الطلب</p>
+                  <div className="space-y-3">
+                    {ORDER_STATUS_STEPS.map((step, index) => {
+                      const current = normalizedOrderStatus(tracking.data!.status);
+                      const currentIndex = ORDER_STATUS_STEPS.findIndex((item) => item.value === current);
+                      const active = index <= currentIndex;
+                      const isCurrent = step.value === current;
+                      return (
+                        <div key={step.value} className="flex items-center gap-3">
+                          <div className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                            {index + 1}
+                          </div>
+                          <div className={`text-sm ${isCurrent ? "font-extrabold text-primary" : active ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                            {step.label}
+                            {isCurrent && <span className="mr-2 text-xs font-normal">(الحالة الحالية)</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <p className="mt-3 text-center text-sm font-semibold text-primary">
+                الحالة الحالية: {statusLabel(tracking.data.status)}
               </p>
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-2 text-center text-sm text-muted-foreground">
                 المبلغ: {formatPrice(Number(tracking.data.total))}
               </p>
               <Button className="mt-6 w-full rounded-full" onClick={() => navigate({ to: "/" })}>
