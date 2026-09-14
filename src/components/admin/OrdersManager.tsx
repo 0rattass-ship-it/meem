@@ -26,7 +26,6 @@ type Order = {
   id: string;
   order_number: number;
   customer_name: string;
-  customer_phone: string;
   address: string | null;
   notes: string | null;
   total: number;
@@ -110,9 +109,7 @@ export function OrdersManager() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-bold text-primary">طلب #{order.order_number}</p>
-                <p className="text-sm">
-                  {order.customer_name} — <span dir="ltr">{order.customer_phone}</span>
-                </p>
+                <p className="text-sm">{order.customer_name}</p>
                 {order.address && (
                   <p className="text-xs text-muted-foreground">العنوان: {order.address}</p>
                 )}

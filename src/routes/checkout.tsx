@@ -53,7 +53,6 @@ export const Route = createFileRoute("/checkout")({
 
 const schema = z.object({
   customer_name: z.string().trim().min(2, "الاسم مطلوب").max(80),
-  customer_phone: z.string().trim().max(20).optional(),
   address: z.string().trim().max(200).optional(),
   notes: z.string().trim().max(300).optional(),
 });
@@ -74,7 +73,7 @@ type TrackedOrder = {
 function CheckoutPage() {
   const cart = useCart();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ customer_name: "", customer_phone: "", address: "", notes: "" });
+  const [form, setForm] = useState({ customer_name: "", address: "", notes: "" });
   const [customerProfile, setCustomerProfile] = useState<{ name: string; email: string } | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [deliveryTimeId, setDeliveryTimeId] = useState("");
@@ -100,7 +99,7 @@ function CheckoutPage() {
     const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
     const profile = { name: fallbackName, email: user.email ?? "" };
     setCustomerProfile(profile);
-    setForm((prev) => ({ ...prev, customer_name: profile.name, customer_phone: "" }));
+    setForm((prev) => ({ ...prev, customer_name: profile.name }));
   }
 
   useEffect(() => {
@@ -219,7 +218,6 @@ function CheckoutPage() {
     setSending(true);
     const { data, error } = await supabase.rpc("place_order_with_payment", {
       _customer_name: parsed.data.customer_name,
-      _customer_phone: parsed.data.customer_phone?.trim() || null,
       _address: parsed.data.address ?? "",
       _notes: parsed.data.notes ?? "",
       _payment_method: paymentMethod,
