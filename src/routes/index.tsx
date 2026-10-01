@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Store,
+  Home,
   UtensilsCrossed,
   ShoppingCart,
   Plus,
@@ -367,8 +367,7 @@ function StorePage() {
                 key={category.id}
                 className="mb-8"
               >
-                <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
-                  <UtensilsCrossed className="size-5" />
+                <h2 className="mb-4 text-xl font-extrabold text-foreground">
                   {category.name}
                 </h2>
 
@@ -390,28 +389,43 @@ function StorePage() {
         )}
       </main>
 
-      {cart.count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
-          <div className="mx-auto flex max-w-3xl items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">
-                إجمالي السلة ({cart.count} عنصر)
-              </p>
+      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+        <nav className="mx-auto flex max-w-3xl items-stretch justify-around gap-1 rounded-full bg-brand-dark px-2 py-2 text-primary-foreground shadow-[var(--shadow-soft)]">
+          <button
+            type="button"
+            onClick={() =>
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            <Home className="size-5" />
+            القائمة الرئيسية
+          </button>
 
-              <p className="text-lg font-bold text-primary">
-                {formatPrice(cart.total)}
-              </p>
-            </div>
+          <button
+            type="button"
+            onClick={() =>
+              profile
+                ? setOrdersOpen(true)
+                : setLoginOpen(true)
+            }
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-xs font-semibold text-primary-foreground/80 transition-colors hover:text-primary-foreground"
+          >
+            <ClipboardList className="size-5" />
+            طلباتي
+          </button>
 
-            <Button asChild size="lg" className="rounded-full">
-              <Link to="/checkout">
-                <ShoppingCart className="size-4" />
-                إتمام الطلب
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
+          {cart.count > 0 && (
+            <Link
+              to="/checkout"
+              className="flex flex-1 flex-col items-center gap-0.5 rounded-full bg-primary-foreground/15 py-1.5 text-xs font-semibold text-primary-foreground"
+            >
+              <ShoppingCart className="size-5" />
+              السلة ({cart.count}) — {formatPrice(cart.total)}
+            </Link>
+          )}
+        </nav>
+      </div>
 
       <CustomerLoginDialog
         open={loginOpen}
