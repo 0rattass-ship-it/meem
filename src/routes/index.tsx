@@ -252,7 +252,7 @@ function StorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-32">
       <header className="bg-card/80 backdrop-blur">
         <div className="mx-auto max-w-3xl px-4 pt-5">
           <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
@@ -584,10 +584,10 @@ function CategoryChip({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+      className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition-colors ${
         active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-secondary-foreground hover:bg-accent"
+          ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+          : "bg-card text-foreground shadow-sm hover:bg-accent"
       }`}
     >
       {label}
@@ -611,10 +611,10 @@ function ProductCard({
     .reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="card-soft flex flex-col overflow-hidden p-3">
+    <div className="card-soft flex flex-col overflow-hidden rounded-3xl p-2.5">
       <button
         onClick={onOpen}
-        className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
+        className="relative mb-2 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
         <ProductBadgeTag
           badge={product.badge}
@@ -634,26 +634,26 @@ function ProductCard({
 
       <button
         onClick={onOpen}
-        className="text-center"
+        className="px-1 text-center"
       >
-        <h3 className="font-bold text-foreground">
+        <h3 className="text-base font-extrabold text-foreground">
           {product.name}
         </h3>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-0.5 text-sm text-muted-foreground">
           {formatPrice(Number(product.price))}
         </p>
       </button>
 
       {!product.is_available ? (
-        <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
+        <p className="mt-2.5 rounded-full bg-muted py-2.5 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
       ) : (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <Button
             onClick={onOpen}
-            className="w-full rounded-full"
+            className="w-full rounded-full py-5 text-sm font-bold"
             size="sm"
           >
             <Plus className="size-4" />
