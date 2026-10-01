@@ -54,16 +54,12 @@ export function CustomerProfileDialog({
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>بياناتي</DialogTitle>
-          <DialogDescription>عدّل اسمك من هنا. البريد الإلكتروني مرتبط بحسابك.</DialogDescription>
+          <DialogDescription>عدّل اسم العرض من هنا. تسجيل الدخول يبقى باسمك الثلاثي الأصلي.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="customer-profile-name">الاسم</Label>
             <Input id="customer-profile-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customer-profile-email">البريد الإلكتروني</Label>
-            <Input id="customer-profile-email" type="email" dir="ltr" value={email} disabled />
           </div>
           <Button className="w-full rounded-full" disabled={busy} onClick={save}>{busy ? "جاري الحفظ…" : "حفظ البيانات"}</Button>
         </div>
