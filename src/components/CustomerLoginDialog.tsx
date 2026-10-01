@@ -16,7 +16,6 @@ export function CustomerLoginDialog({
   onLoggedIn?: () => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,7 +23,6 @@ export function CustomerLoginDialog({
   useEffect(() => {
     if (!open) {
       setMode("login");
-      setEmail("");
       setPassword("");
       setName("");
       setBusy(false);
@@ -32,18 +30,14 @@ export function CustomerLoginDialog({
   }, [open]);
 
   async function submit() {
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanName = name.trim();
-    if (!cleanEmail || !cleanEmail.includes("@")) {
-      toast.error("أدخل بريدًا إلكترونيًا صحيحًا");
+    const cleanName = name.trim().replace(/\s+/g, " ");
+    if (cleanName.split(" ").length < 3) {
+      toast.error("أدخل اسمك الثلاثي");
       return;
     }
+    const cleanEmail = nameToEmail(cleanName);
     if (password.length < 6) {
       toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
-      return;
-    }
-    if (mode === "signup" && cleanName.length < 2) {
-      toast.error("الاسم مطلوب");
       return;
     }
 
@@ -52,12 +46,8 @@ export function CustomerLoginDialog({
       const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (error) {
         setBusy(false);
-        toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        toast.error("الاسم أو كلمة المرور غير صحيحة");
         return;
-      }
-      // The Supabase Auth session is the source of truth. Do not block login on a separate profile table.
-      if (name.trim()) {
-        await supabase.auth.updateUser({ data: { name: name.trim() } });
       }
       setBusy(false);
       toast.success("تم تسجيل الدخول");
@@ -71,12 +61,11 @@ export function CustomerLoginDialog({
       password,
       options: {
         data: { name: cleanName },
-        emailRedirectTo: window.location.origin,
       },
     });
     if (error) {
       setBusy(false);
-      toast.error(error.message.includes("already") ? "هذا البريد مسجل بالفعل، سجّل الدخول" : "تعذر إنشاء الحساب");
+      toast.error(error.message.includes("already") ? "هذا الاسم مسجل بالفعل، سجّل الدخول" : "تعذر إنشاء الحساب");
       return;
     }
 
@@ -88,7 +77,7 @@ export function CustomerLoginDialog({
     } else {
       setBusy(false);
       setMode("login");
-      toast.success("تم إنشاء الحساب. تحقق من بريدك الإلكتروني ثم سجّل الدخول.");
+      toast.success("تم إنشاء الحساب، سجّل الدخول الآن.");
     }
   }
 
@@ -102,15 +91,9 @@ export function CustomerLoginDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {mode === "signup" && (
-            <div className="space-y-2">
-              <Label htmlFor="customer-login-name">الاسم</Label>
-              <Input id="customer-login-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="اسمك" />
-            </div>
-          )}
           <div className="space-y-2">
-            <Label htmlFor="customer-login-email">البريد الإلكتروني</Label>
-            <Input id="customer-login-email" type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@email.com" />
+            <Label htmlFor="customer-login-name">الاسم الثلاثي</Label>
+            <Input id="customer-login-name" value={name} maxLength={80} autoComplete="name" onChange={(e) => setName(e.target.value)} placeholder="مثال: محمد أحمد علي" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="customer-login-password">كلمة المرور</Label>
@@ -126,4 +109,11 @@ export function CustomerLoginDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// Auth needs an email; derive a stable synthetic one from the normalized full name.
+function nameToEmail(fullName: string) {
+  const bytes = new TextEncoder().encode(fullName.toLowerCase());
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `c${hex}@customers.local`;
 }

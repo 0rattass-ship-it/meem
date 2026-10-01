@@ -447,7 +447,6 @@ function CheckoutPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-foreground">{customerProfile.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground" dir="ltr">{customerProfile.email}</p>
                 </div>
                 <Link to="/" className="text-sm font-semibold text-primary underline underline-offset-4">
                   تعديل
