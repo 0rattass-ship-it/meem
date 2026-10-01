@@ -253,40 +253,12 @@ function StorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <header className="border-b border-border bg-card/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
-            <Store className="size-7" />
-          </div>
-
-          <div className="flex-1">
-            <h1 className="text-2xl font-extrabold text-primary">
-              مِيم | MEEM
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              اختر طلبك وأرسله مباشرة
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
+      <header className="bg-card/80 backdrop-blur">
+        <div className="mx-auto max-w-3xl px-4 pt-5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
             <Button
-              variant="outline"
               size="sm"
-              className="rounded-full gap-2"
-              onClick={() =>
-                profile
-                  ? setOrdersOpen(true)
-                  : setLoginOpen(true)
-              }
-            >
-              <ClipboardList className="size-4" />
-              طلباتي
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full gap-2"
+              className="shrink-0 rounded-full px-5"
               onClick={() =>
                 profile
                   ? setProfileOpen(true)
@@ -296,14 +268,35 @@ function StorePage() {
               <UserRound className="size-4" />
               {profile ? "بياناتي" : "تسجيل الدخول"}
             </Button>
+
+            <h1 className="truncate text-center text-2xl font-extrabold tracking-wide text-primary">
+              MEEM | ميم
+            </h1>
+
+            <button
+              type="button"
+              aria-label="القائمة الرئيسية"
+              onClick={() =>
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+            >
+              <Home className="size-6" />
+            </button>
           </div>
 
-          <InstallAppButton />
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            اختر طلبك وأرسله مباشرة
+          </p>
+
+          <div className="mt-2 flex justify-center">
+            <InstallAppButton />
+          </div>
         </div>
       </header>
 
-      <nav className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-3">
+      <nav className="mt-3">
+        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-2">
           <div className="flex gap-2">
             <CategoryChip
               active={activeCategory === null}
