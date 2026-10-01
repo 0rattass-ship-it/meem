@@ -96,7 +96,7 @@ function CheckoutPage() {
       setCustomerProfile(null);
       return;
     }
-    const fallbackName = (user.user_metadata?.name as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
+    const fallbackName = (user.user_metadata?.["name"] as string | undefined)?.trim() || user.email?.split("@")[0] || "عميل";
     const profile = { name: fallbackName, email: user.email ?? "" };
     setCustomerProfile(profile);
     setForm((prev) => ({ ...prev, customer_name: profile.name }));

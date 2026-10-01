@@ -112,7 +112,7 @@ function StorePage() {
     }
 
     const fallbackName =
-      (user.user_metadata?.name as string | undefined)?.trim() ||
+      (user.user_metadata?.["name"] as string | undefined)?.trim() ||
       user.email?.split("@")[0] ||
       "عميل";
 
@@ -197,7 +197,10 @@ function StorePage() {
         }),
       );
 
-      void supabase.rpc("record_visitor_session", {
+      void (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<unknown>)("record_visitor_session", {
         _session_id: sessionId,
       });
     } catch {
