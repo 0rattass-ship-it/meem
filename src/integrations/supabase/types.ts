@@ -203,34 +203,12 @@ export type Database = {
           },
         ]
       }
-      customer_profiles: {
-        Row: {
-          user_id: string
-          name: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          name: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          user_id?: string
-          name?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       orders: {
         Row: {
           address: string | null
           booking_day: number | null
           created_at: string
           customer_name: string
-          customer_phone: string | null
           delivery_location: string | null
           delivery_time: string | null
           id: string
@@ -239,10 +217,9 @@ export type Database = {
           payment_method: string
           payment_status: string
           payment_window: string | null
-          tracking_token_hash: string | null
-          user_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
+          tracking_token_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -250,7 +227,6 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name: string
-          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
@@ -259,10 +235,9 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           payment_window?: string | null
-          tracking_token_hash?: string | null
-          user_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
+          tracking_token_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -270,7 +245,6 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name?: string
-          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
@@ -279,33 +253,32 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           payment_window?: string | null
-          tracking_token_hash?: string | null
-          user_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
+          tracking_token_hash?: string | null
           updated_at?: string
         }
         Relationships: []
       }
       payment_settings: {
         Row: {
-          id: number
           account_holder_name: string
           account_number: string
+          id: number
           payment_window: string
           updated_at: string
         }
         Insert: {
-          id?: number
           account_holder_name?: string
           account_number?: string
+          id?: number
           payment_window?: string
           updated_at?: string
         }
         Update: {
-          id?: number
           account_holder_name?: string
           account_number?: string
+          id?: number
           payment_window?: string
           updated_at?: string
         }
@@ -465,30 +438,6 @@ export type Database = {
           },
         ]
       }
-      visitor_sessions: {
-        Row: {
-          id: string
-          session_id: string
-          first_seen: string
-          last_seen: string
-          visit_count: number
-        }
-        Insert: {
-          id?: string
-          session_id: string
-          first_seen?: string
-          last_seen?: string
-          visit_count?: number
-        }
-        Update: {
-          id?: string
-          session_id?: string
-          first_seen?: string
-          last_seen?: string
-          visit_count?: number
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -515,57 +464,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_admin_statistics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_statistics: { Args: { p_request: string }; Returns: Json }
+      get_admin_statistics_v2: { Args: { p_request: string }; Returns: Json }
       get_my_order_tracking: {
-        Args: {
-          _order_number: number
-        }
+        Args: { _order_number: number }
         Returns: {
-          order_number: number
+          booking_day: number
+          created_at: string
           customer_name: string
-          total: number
-          status: Database["public"]["Enums"]["order_status"]
+          delivery_time: string
+          order_number: number
           payment_method: string
           payment_status: string
-          payment_window: string | null
-          booking_day: number | null
-          delivery_time: string | null
-          created_at: string
+          payment_window: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
         }[]
       }
       get_order_tracking: {
-        Args: {
-          _order_number: number
-          _tracking_token: string
-        }
+        Args: { _order_number: number; _tracking_token: string }
         Returns: {
-          order_number: number
+          booking_day: number
+          created_at: string
           customer_name: string
-          total: number
-          status: Database["public"]["Enums"]["order_status"]
+          delivery_location: string
+          delivery_time: string
+          order_number: number
           payment_method: string
           payment_status: string
-          payment_window: string | null
-          created_at: string
+          payment_window: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
         }[]
-      }
-      place_order_with_payment: {
-        Args: {
-          _customer_name: string
-          _customer_phone: string | null
-          _address: string
-          _notes: string
-          _items: Json
-          _payment_method: string
-          _tracking_token: string
-          _delivery_time_id?: string
-          _delivery_location_id?: string
-          _booking_day?: number
-        }
-        Returns: Json
       }
       has_role: {
         Args: {
@@ -574,18 +504,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      record_visitor_session: {
-        Args: {
-          _session_id: string
-        }
-        Returns: undefined
-      }
       place_order: {
         Args: {
           _address: string
           _booking_day?: number
           _customer_name: string
-          _customer_phone: string
           _delivery_location_id?: string
           _delivery_time_id?: string
           _items: Json
@@ -593,10 +516,33 @@ export type Database = {
         }
         Returns: number
       }
+      place_order_with_payment: {
+        Args: {
+          _address: string
+          _booking_day?: number
+          _customer_name: string
+          _delivery_location_id?: string
+          _delivery_time_id?: string
+          _items: Json
+          _notes: string
+          _payment_method: string
+          _tracking_token: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin"
-      order_status: "new" | "received" | "reviewing" | "accepted" | "preparing" | "ready" | "delivered" | "completed" | "cancelled"
+      order_status:
+        | "new"
+        | "preparing"
+        | "ready"
+        | "completed"
+        | "cancelled"
+        | "received"
+        | "reviewing"
+        | "accepted"
+        | "delivered"
       product_badge: "none" | "always" | "reservation"
     }
     CompositeTypes: {
@@ -726,7 +672,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
-      order_status: ["new", "received", "reviewing", "accepted", "preparing", "ready", "delivered", "completed", "cancelled"],
+      order_status: [
+        "new",
+        "preparing",
+        "ready",
+        "completed",
+        "cancelled",
+        "received",
+        "reviewing",
+        "accepted",
+        "delivered",
+      ],
       product_badge: ["none", "always", "reservation"],
     },
   },

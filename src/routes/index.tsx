@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Store,
+  Home,
   UtensilsCrossed,
   ShoppingCart,
   Plus,
@@ -112,7 +112,7 @@ function StorePage() {
     }
 
     const fallbackName =
-      (user.user_metadata?.name as string | undefined)?.trim() ||
+      (user.user_metadata?.["name"] as string | undefined)?.trim() ||
       user.email?.split("@")[0] ||
       "عميل";
 
@@ -197,7 +197,10 @@ function StorePage() {
         }),
       );
 
-      void supabase.rpc("record_visitor_session", {
+      void (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<unknown>)("record_visitor_session", {
         _session_id: sessionId,
       });
     } catch {
@@ -252,41 +255,13 @@ function StorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      <header className="border-b border-border bg-card/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
-            <Store className="size-7" />
-          </div>
-
-          <div className="flex-1">
-            <h1 className="text-2xl font-extrabold text-primary">
-              مِيم | MEEM
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              اختر طلبك وأرسله مباشرة
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-background pb-32">
+      <header className="bg-card/80 backdrop-blur">
+        <div className="mx-auto max-w-3xl px-4 pt-5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
             <Button
-              variant="outline"
               size="sm"
-              className="rounded-full gap-2"
-              onClick={() =>
-                profile
-                  ? setOrdersOpen(true)
-                  : setLoginOpen(true)
-              }
-            >
-              <ClipboardList className="size-4" />
-              طلباتي
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full gap-2"
+              className="shrink-0 rounded-full px-5"
               onClick={() =>
                 profile
                   ? setProfileOpen(true)
@@ -296,14 +271,35 @@ function StorePage() {
               <UserRound className="size-4" />
               {profile ? "بياناتي" : "تسجيل الدخول"}
             </Button>
+
+            <h1 className="truncate text-center text-2xl font-extrabold tracking-wide text-primary">
+              MEEM | ميم
+            </h1>
+
+            <button
+              type="button"
+              aria-label="القائمة الرئيسية"
+              onClick={() =>
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+            >
+              <Home className="size-6" />
+            </button>
           </div>
 
-          <InstallAppButton />
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            اختر طلبك وأرسله مباشرة
+          </p>
+
+          <div className="mt-2 flex justify-center">
+            <InstallAppButton />
+          </div>
         </div>
       </header>
 
-      <nav className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-3">
+      <nav className="mt-3">
+        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-2">
           <div className="flex gap-2">
             <CategoryChip
               active={activeCategory === null}
@@ -374,8 +370,7 @@ function StorePage() {
                 key={category.id}
                 className="mb-8"
               >
-                <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
-                  <UtensilsCrossed className="size-5" />
+                <h2 className="mb-4 text-xl font-extrabold text-foreground">
                   {category.name}
                 </h2>
 
@@ -397,28 +392,43 @@ function StorePage() {
         )}
       </main>
 
-      {cart.count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
-          <div className="mx-auto flex max-w-3xl items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">
-                إجمالي السلة ({cart.count} عنصر)
-              </p>
+      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+        <nav className="mx-auto flex max-w-3xl items-stretch justify-around gap-1 rounded-full bg-brand-dark px-2 py-2 text-primary-foreground shadow-[var(--shadow-soft)]">
+          <button
+            type="button"
+            onClick={() =>
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            <Home className="size-5" />
+            القائمة الرئيسية
+          </button>
 
-              <p className="text-lg font-bold text-primary">
-                {formatPrice(cart.total)}
-              </p>
-            </div>
+          <button
+            type="button"
+            onClick={() =>
+              profile
+                ? setOrdersOpen(true)
+                : setLoginOpen(true)
+            }
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-xs font-semibold text-primary-foreground/80 transition-colors hover:text-primary-foreground"
+          >
+            <ClipboardList className="size-5" />
+            طلباتي
+          </button>
 
-            <Button asChild size="lg" className="rounded-full">
-              <Link to="/checkout">
-                <ShoppingCart className="size-4" />
-                إتمام الطلب
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
+          {cart.count > 0 && (
+            <Link
+              to="/checkout"
+              className="flex flex-1 flex-col items-center gap-0.5 rounded-full bg-primary-foreground/15 py-1.5 text-xs font-semibold text-primary-foreground"
+            >
+              <ShoppingCart className="size-5" />
+              السلة ({cart.count}) — {formatPrice(cart.total)}
+            </Link>
+          )}
+        </nav>
+      </div>
 
       <CustomerLoginDialog
         open={loginOpen}
@@ -577,10 +587,10 @@ function CategoryChip({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+      className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition-colors ${
         active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-secondary-foreground hover:bg-accent"
+          ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+          : "bg-card text-foreground shadow-sm hover:bg-accent"
       }`}
     >
       {label}
@@ -604,10 +614,10 @@ function ProductCard({
     .reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="card-soft flex flex-col overflow-hidden p-3">
+    <div className="card-soft flex flex-col overflow-hidden rounded-3xl p-2.5">
       <button
         onClick={onOpen}
-        className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
+        className="relative mb-2 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
       >
         <ProductBadgeTag
           badge={product.badge}
@@ -627,26 +637,26 @@ function ProductCard({
 
       <button
         onClick={onOpen}
-        className="text-center"
+        className="px-1 text-center"
       >
-        <h3 className="font-bold text-foreground">
+        <h3 className="text-base font-extrabold text-foreground">
           {product.name}
         </h3>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-0.5 text-sm text-muted-foreground">
           {formatPrice(Number(product.price))}
         </p>
       </button>
 
       {!product.is_available ? (
-        <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
+        <p className="mt-2.5 rounded-full bg-muted py-2.5 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
       ) : (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <Button
             onClick={onOpen}
-            className="w-full rounded-full"
+            className="w-full rounded-full py-5 text-sm font-bold"
             size="sm"
           >
             <Plus className="size-4" />
