@@ -122,19 +122,8 @@ function StorePage() {
       email: user.email ?? "",
     });
 
-    /*
-     * تحميل آخر 10 طلبات.
-     *
-     * لا نستخدم user_id هنا لأن الطلبات الحالية قد لا تحتوي
-     * على user_id، ولذلك كان قسم "طلباتي" يظهر فارغًا.
-     */
-    const { data: orders } = await supabase
-      .from("orders")
-      .select(
-        "order_number, created_at, status, booking_day, delivery_time",
-      )
-      .order("created_at", { ascending: false })
-      .limit(10);
+    // طلبات العميل الحالي فقط (مرتبطة بحسابه من الخلفية)
+    const { data: orders } = await supabase.rpc("get_my_orders");
 
     setSavedOrders(
       (orders ?? []).map((order) => ({

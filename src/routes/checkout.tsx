@@ -235,7 +235,24 @@ function CheckoutPage() {
     setSending(false);
 
     if (error || !data || typeof data !== "object" || !("order_number" in data)) {
-      toast.error("تعذّر إرسال الطلب، حاول مرة أخرى");
+      console.error("place_order failed", error);
+      const msg = error?.message ?? "";
+      const reasons: Record<string, string> = {
+        invalid_product: "أحد المنتجات في السلة لم يعد متوفرًا، احذفه من السلة وأعد المحاولة",
+        invalid_addon: "إحدى الإضافات لم تعد متاحة، احذف المنتج وأضفه من جديد",
+        addon_required: "يجب اختيار إضافة واحدة على الأقل لبعض المنتجات",
+        product_day_unavailable: "أحد المنتجات غير متاح في يوم التسليم المحدد",
+        product_time_unavailable: "وقت التسليم المختار غير متاح لأحد المنتجات",
+        invalid_delivery_time: "وقت التسليم لم يعد متاحًا، اختر وقتًا آخر",
+        invalid_delivery_location: "مكان التسليم لم يعد متاحًا، اختر مكانًا آخر",
+        payment_window_not_configured: "لم يتم تحديد وقت الدفع في المشرب بعد",
+        invalid_name: "الاسم غير صحيح",
+      };
+      const key = Object.keys(reasons).find((k) => msg.includes(k));
+      toast.error(key ? reasons[key] : "تعذّر إرسال الطلب، تحقق من الاتصال وحاول مرة أخرى");
+      if (key === "invalid_product" || key === "invalid_addon") {
+        void queryClient.invalidateQueries();
+      }
       return;
     }
     const result = data as { order_number: number; total: number; payment_method: string };
