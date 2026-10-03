@@ -11,6 +11,7 @@ import {
   CalendarClock,
   ClipboardList,
   UserRound,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -98,6 +99,8 @@ function StorePage() {
     email: string;
   } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const storeInfo = useStoreInformation();
 
   async function loadCustomerData() {
     setAuthLoading(true);
@@ -266,14 +269,10 @@ function StorePage() {
               variant="outline"
               size="sm"
               className="gap-2 rounded-full"
-              onClick={() =>
-                profile
-                  ? setOrdersOpen(true)
-                  : setLoginOpen(true)
-              }
+              onClick={() => setInfoOpen(true)}
             >
-              <ClipboardList className="size-4" />
-              طلباتي
+              <Info className="size-4" />
+              المعلومات
             </Button>
 
             <Button
@@ -443,6 +442,26 @@ function StorePage() {
           onSaved={(saved) => setProfile(saved)}
         />
       )}
+
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>المعلومات</DialogTitle>
+            <DialogDescription>معلومات وملاحظات من المتجر.</DialogDescription>
+          </DialogHeader>
+          {storeInfo.isLoading ? (
+            <p className="py-6 text-center text-muted-foreground">جاري التحميل…</p>
+          ) : storeInfo.data?.trim() ? (
+            <div className="max-h-[60vh] overflow-y-auto whitespace-pre-line rounded-2xl bg-surface p-4 text-sm leading-7 text-foreground">
+              {storeInfo.data}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
+              لا توجد معلومات حالياً.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={ordersOpen}
