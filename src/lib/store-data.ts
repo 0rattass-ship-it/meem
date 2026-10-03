@@ -32,6 +32,22 @@ export function usePaymentSettings() {
   });
 }
 
+export function useStoreInformation() {
+  return useQuery({
+    ...publicQueryOptions,
+    queryKey: ["store-information"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_information")
+        .select("content")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.content ?? "";
+    },
+  });
+}
+
 export type ProductBadge = "none" | "always" | "reservation";
 
 export const PRODUCT_BADGES: { value: ProductBadge; label: string }[] = [

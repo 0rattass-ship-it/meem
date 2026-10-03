@@ -11,6 +11,7 @@ import { AddonsManager } from "@/components/admin/AddonsManager";
 import { OrdersManager } from "@/components/admin/OrdersManager";
 import { DeliverySettingsManager } from "@/components/admin/DeliverySettingsManager";
 import { StatisticsManager } from "@/components/admin/StatisticsManager";
+import { StoreInfoManager } from "@/components/admin/StoreInfoManager";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -124,6 +125,9 @@ function AdminPage() {
             <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="categories">
               الأقسام
             </TabsTrigger>
+            <TabsTrigger className="flex-1 rounded-full text-xs sm:text-sm" value="info">
+              المعلومات
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="orders">
             <OrdersManager />
@@ -142,6 +146,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="categories">
             <CategoriesManager />
+          </TabsContent>
+          <TabsContent value="info">
+            <StoreInfoManager />
           </TabsContent>
         </Tabs>
 
