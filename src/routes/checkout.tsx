@@ -250,9 +250,6 @@ function CheckoutPage() {
       };
       const key = Object.keys(reasons).find((k) => msg.includes(k));
       toast.error(key ? reasons[key] : "تعذّر إرسال الطلب، تحقق من الاتصال وحاول مرة أخرى");
-      if (key === "invalid_product" || key === "invalid_addon") {
-        void queryClient.invalidateQueries();
-      }
       return;
     }
     const result = data as { order_number: number; total: number; payment_method: string };
