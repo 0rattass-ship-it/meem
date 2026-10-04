@@ -42,6 +42,7 @@ import {
   useProducts,
   type Product,
   type ProductBadge,
+  useStoreInformation,
 } from "@/lib/store-data";
 
 export const Route = createFileRoute("/")({
