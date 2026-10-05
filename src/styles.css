@@ -36,6 +36,8 @@
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
   --color-brand-dark: var(--brand-dark);
+  --color-schedule-green: var(--schedule-green);
+  --color-schedule-beige: var(--schedule-beige);
   --shadow-soft: var(--shadow-soft);
   --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
 }
@@ -65,6 +67,8 @@
   --brand: oklch(0.42 0.088 55);
   --brand-soft: oklch(0.7 0.05 66);
   --brand-dark: oklch(0.3 0.06 55);
+  --schedule-green: oklch(0.46 0.12 135);
+  --schedule-beige: oklch(0.67 0.06 90);
   --shadow-soft: 0 8px 24px -12px oklch(0.42 0.088 55 / 0.28);
 }
 
@@ -90,6 +94,8 @@
   --brand: oklch(0.8 0.06 75);
   --brand-soft: oklch(0.6 0.05 66);
   --brand-dark: oklch(0.16 0.03 58);
+  --schedule-green: oklch(0.68 0.12 135);
+  --schedule-beige: oklch(0.72 0.05 90);
   --shadow-soft: 0 8px 24px -12px oklch(0 0 0 / 0.5);
 }
 
