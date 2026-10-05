@@ -63,9 +63,8 @@ export const Route = createFileRoute("/")({
         content:
           "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
       },
-      { property: "og:image", content: "/og-image.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: StorePage,
@@ -273,7 +272,7 @@ function StorePage() {
               onClick={() => setInfoOpen(true)}
             >
               <Info className="size-4" />
-              المعلومات
+              التعليمات
             </Button>
 
             <Button
@@ -445,20 +444,34 @@ function StorePage() {
       )}
 
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>المعلومات</DialogTitle>
-            <DialogDescription>معلومات وملاحظات من المتجر.</DialogDescription>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader className="text-right">
+            <DialogTitle>التعليمات</DialogTitle>
+            <DialogDescription>مواعيد الحجز والتسليم المعتمدة من المتجر.</DialogDescription>
           </DialogHeader>
           {storeInfo.isLoading ? (
             <p className="py-6 text-center text-muted-foreground">جاري التحميل…</p>
-          ) : storeInfo.data?.trim() ? (
-            <div className="max-h-[60vh] overflow-y-auto whitespace-pre-line rounded-2xl bg-surface p-4 text-sm leading-7 text-foreground">
-              {storeInfo.data}
+          ) : storeInfo.data ? (
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+              <InstructionRow
+                color="green"
+                label="الحجز"
+                text={storeInfo.data.booking_instruction}
+              />
+              <InstructionRow
+                color="beige"
+                label="التسليم"
+                text={storeInfo.data.delivery_instruction}
+              />
+              {storeInfo.data.content.trim() && (
+                <div className="whitespace-pre-line border-t border-border pt-4 text-sm leading-7 text-muted-foreground">
+                  {storeInfo.data.content}
+                </div>
+              )}
             </div>
           ) : (
             <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
-              لا توجد معلومات حالياً.
+              لا توجد تعليمات حالياً.
             </div>
           )}
         </DialogContent>
@@ -593,6 +606,29 @@ function ProductBadgeTag({
   );
 }
 
+function InstructionRow({
+  color,
+  label,
+  text,
+}: {
+  color: "green" | "beige";
+  label: string;
+  text: string;
+}) {
+  return (
+    <div className="flex min-h-20 items-stretch gap-4 rounded-xl bg-surface p-4">
+      <span
+        aria-hidden="true"
+        className={`w-2 shrink-0 rounded-full ${color === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`}
+      />
+      <p className="self-center whitespace-pre-line text-sm leading-7 text-foreground">
+        <span className="font-bold">{label}:</span>{" "}
+        {text.trim() || "لم تُحدد التعليمات بعد"}
+      </p>
+    </div>
+  );
+}
+
 function CategoryChip({
   label,
   active,
@@ -632,7 +668,15 @@ function ProductCard({
     .reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="card-soft flex flex-col overflow-hidden p-3">
+    <div className="card-soft relative flex flex-col overflow-hidden p-3">
+      <div className="absolute right-1.5 top-[55%] z-10 flex -translate-y-1/2 gap-1" aria-hidden="true">
+        {product.card_stripe_primary !== "hidden" && (
+          <span className={`h-12 w-1.5 rounded-full ${product.card_stripe_primary === "beige" ? "bg-schedule-beige" : "bg-schedule-green"}`} />
+        )}
+        {product.card_stripe_secondary !== "hidden" && (
+          <span className={`h-12 w-1.5 rounded-full ${product.card_stripe_secondary === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`} />
+        )}
+      </div>
       <button
         onClick={onOpen}
         className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
