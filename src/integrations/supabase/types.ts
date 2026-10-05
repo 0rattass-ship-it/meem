@@ -392,6 +392,8 @@ export type Database = {
         Row: {
           addons_required: boolean
           badge: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary: string
+          card_stripe_secondary: string
           category_id: string | null
           created_at: string
           description: string | null
@@ -406,6 +408,8 @@ export type Database = {
         Insert: {
           addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary?: string
+          card_stripe_secondary?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -420,6 +424,8 @@ export type Database = {
         Update: {
           addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary?: string
+          card_stripe_secondary?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -443,17 +449,23 @@ export type Database = {
       }
       store_information: {
         Row: {
+          booking_instruction: string
           content: string
+          delivery_instruction: string
           id: number
           updated_at: string
         }
         Insert: {
+          booking_instruction?: string
           content?: string
+          delivery_instruction?: string
           id?: number
           updated_at?: string
         }
         Update: {
+          booking_instruction?: string
           content?: string
+          delivery_instruction?: string
           id?: number
           updated_at?: string
         }
