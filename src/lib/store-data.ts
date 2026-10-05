@@ -16,6 +16,12 @@ export type PaymentSettings = {
   payment_window: string;
 };
 
+export type StoreInformation = {
+  content: string;
+  booking_instruction: string;
+  delivery_instruction: string;
+};
+
 export function usePaymentSettings() {
   return useQuery({
     ...publicQueryOptions,
@@ -39,11 +45,15 @@ export function useStoreInformation() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_information")
-        .select("content")
+        .select("content, booking_instruction, delivery_instruction")
         .eq("id", 1)
         .maybeSingle();
       if (error) throw error;
-      return data?.content ?? "";
+      return {
+        content: data?.content ?? "",
+        booking_instruction: data?.booking_instruction ?? "",
+        delivery_instruction: data?.delivery_instruction ?? "",
+      } satisfies StoreInformation;
     },
   });
 }
@@ -67,6 +77,8 @@ export type Product = {
   sort_order: number;
   badge: ProductBadge;
   addons_required: boolean;
+  card_stripe_primary: "green" | "beige" | "hidden";
+  card_stripe_secondary: "green" | "beige" | "hidden";
 };
 
 export type Addon = {

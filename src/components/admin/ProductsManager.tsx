@@ -74,6 +74,8 @@ export function ProductsManager() {
         description: "",
         badge: "none",
         addons_required: false,
+        card_stripe_primary: "green",
+        card_stripe_secondary: "beige",
       });
       setDays([]);
       setTimeIds([]);
@@ -147,6 +149,8 @@ export function ProductsManager() {
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
       addons_required: editing.addons_required ?? false,
+      card_stripe_primary: editing.card_stripe_primary ?? "green",
+      card_stripe_secondary: editing.card_stripe_secondary ?? "beige",
     };
     const { data, error } = editing.id
       ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
@@ -380,6 +384,44 @@ export function ProductsManager() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3 rounded-xl bg-surface p-3">
+              <div>
+                <Label>شرائط بطاقة المنتج</Label>
+                <p className="text-xs text-muted-foreground">اختاري لون كل شريط أو أخفيه لهذا المنتج فقط.</p>
+              </div>
+              {([
+                ["card_stripe_primary", "الشريط الأول"],
+                ["card_stripe_secondary", "الشريط الثاني"],
+              ] as const).map(([field, label]) => (
+                <div key={field} className="flex items-center gap-3">
+                  <span className="w-20 text-sm font-semibold">{label}</span>
+                  <Select
+                    value={editing?.[field] ?? (field === "card_stripe_primary" ? "green" : "beige")}
+                    onValueChange={(value) => setEditing({ ...editing, [field]: value as Product[typeof field] })}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="green">أخضر</SelectItem>
+                      <SelectItem value="beige">بيج</SelectItem>
+                      <SelectItem value="hidden">مخفي</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span
+                    aria-hidden="true"
+                    className={`h-8 w-2 rounded-full ${
+                      editing?.[field] === "hidden"
+                        ? "bg-muted"
+                        : editing?.[field] === "beige"
+                          ? "bg-schedule-beige"
+                          : "bg-schedule-green"
+                    }`}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="space-y-1 rounded-xl bg-surface p-3">
