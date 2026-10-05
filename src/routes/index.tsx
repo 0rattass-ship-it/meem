@@ -669,12 +669,9 @@ function ProductCard({
 
   return (
     <div className="card-soft relative flex flex-col overflow-hidden p-3">
-      <div className="absolute right-1.5 top-[55%] z-10 flex -translate-y-1/2 gap-1" aria-hidden="true">
+      <div className="absolute right-1.5 top-[55%] z-10 -translate-y-1/2" aria-hidden="true">
         {product.card_stripe_primary !== "hidden" && (
           <span className={`h-12 w-1.5 rounded-full ${product.card_stripe_primary === "beige" ? "bg-schedule-beige" : "bg-schedule-green"}`} />
-        )}
-        {product.card_stripe_secondary !== "hidden" && (
-          <span className={`h-12 w-1.5 rounded-full ${product.card_stripe_secondary === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`} />
         )}
       </div>
       <button

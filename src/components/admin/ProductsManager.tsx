@@ -75,7 +75,7 @@ export function ProductsManager() {
         badge: "none",
         addons_required: false,
         card_stripe_primary: "green",
-        card_stripe_secondary: "beige",
+        card_stripe_secondary: "hidden",
       });
       setDays([]);
       setTimeIds([]);
@@ -388,40 +388,35 @@ export function ProductsManager() {
 
             <div className="space-y-3 rounded-xl bg-surface p-3">
               <div>
-                <Label>شرائط بطاقة المنتج</Label>
-                <p className="text-xs text-muted-foreground">اختاري لون كل شريط أو أخفيه لهذا المنتج فقط.</p>
+                <Label>شريط بطاقة المنتج</Label>
+                <p className="text-xs text-muted-foreground">شريط واحد فقط لكل منتج: اختاري لونه أو أخفيه.</p>
               </div>
-              {([
-                ["card_stripe_primary", "الشريط الأول"],
-                ["card_stripe_secondary", "الشريط الثاني"],
-              ] as const).map(([field, label]) => (
-                <div key={field} className="flex items-center gap-3">
-                  <span className="w-20 text-sm font-semibold">{label}</span>
-                  <Select
-                    value={editing?.[field] ?? (field === "card_stripe_primary" ? "green" : "beige")}
-                    onValueChange={(value) => setEditing({ ...editing, [field]: value as Product[typeof field] })}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="green">أخضر</SelectItem>
-                      <SelectItem value="beige">بيج</SelectItem>
-                      <SelectItem value="hidden">مخفي</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span
-                    aria-hidden="true"
-                    className={`h-8 w-2 rounded-full ${
-                      editing?.[field] === "hidden"
-                        ? "bg-muted"
-                        : editing?.[field] === "beige"
-                          ? "bg-schedule-beige"
-                          : "bg-schedule-green"
-                    }`}
-                  />
-                </div>
-              ))}
+              <div className="flex items-center gap-3">
+                <span className="w-20 text-sm font-semibold">اللون</span>
+                <Select
+                  value={editing?.card_stripe_primary ?? "green"}
+                  onValueChange={(value) => setEditing({ ...editing, card_stripe_primary: value as Product["card_stripe_primary"] })}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="green">أخضر</SelectItem>
+                    <SelectItem value="beige">بيج</SelectItem>
+                    <SelectItem value="hidden">مخفي</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span
+                  aria-hidden="true"
+                  className={`h-8 w-2 rounded-full ${
+                    editing?.card_stripe_primary === "hidden"
+                      ? "bg-muted"
+                      : editing?.card_stripe_primary === "beige"
+                        ? "bg-schedule-beige"
+                        : "bg-schedule-green"
+                  }`}
+                />
+              </div>
             </div>
 
             <div className="space-y-1 rounded-xl bg-surface p-3">
