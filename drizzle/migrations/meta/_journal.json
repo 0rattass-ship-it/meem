@@ -22,6 +22,13 @@
       "when": 1791197457423,
       "tag": "0002_add_product_card_stripes_and_store_instructions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791295588403,
+      "tag": "0003_add_stripe_schedule_instructions",
+      "breakpoints": true
     }
   ]
 }

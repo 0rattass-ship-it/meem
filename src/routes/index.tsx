@@ -455,13 +455,13 @@ function StorePage() {
             <div className="max-h-[60vh] space-y-3 overflow-y-auto">
               <InstructionRow
                 color="green"
-                label="الحجز"
-                text={storeInfo.data.booking_instruction}
+                bookingText={storeInfo.data.green_booking_instruction}
+                deliveryText={storeInfo.data.green_delivery_instruction}
               />
               <InstructionRow
                 color="beige"
-                label="التسليم"
-                text={storeInfo.data.delivery_instruction}
+                bookingText={storeInfo.data.beige_booking_instruction}
+                deliveryText={storeInfo.data.beige_delivery_instruction}
               />
               {storeInfo.data.content.trim() && (
                 <div className="whitespace-pre-line border-t border-border pt-4 text-sm leading-7 text-muted-foreground">
@@ -608,12 +608,12 @@ function ProductBadgeTag({
 
 function InstructionRow({
   color,
-  label,
-  text,
+  bookingText,
+  deliveryText,
 }: {
   color: "green" | "beige";
-  label: string;
-  text: string;
+  bookingText: string;
+  deliveryText: string;
 }) {
   return (
     <div className="flex min-h-20 items-stretch gap-4 rounded-xl bg-surface p-4">
@@ -621,10 +621,10 @@ function InstructionRow({
         aria-hidden="true"
         className={`w-2 shrink-0 rounded-full ${color === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`}
       />
-      <p className="self-center whitespace-pre-line text-sm leading-7 text-foreground">
-        <span className="font-bold">{label}:</span>{" "}
-        {text.trim() || "لم تُحدد التعليمات بعد"}
-      </p>
+      <div className="self-center space-y-2 text-sm leading-7 text-foreground">
+        <p className="whitespace-pre-line"><span className="font-bold">الحجز:</span>{" "}{bookingText.trim() || "لم يُحدد الموعد بعد"}</p>
+        <p className="whitespace-pre-line"><span className="font-bold">التسليم:</span>{" "}{deliveryText.trim() || "لم يُحدد الموعد بعد"}</p>
+      </div>
     </div>
   );
 }

@@ -18,8 +18,10 @@ export type PaymentSettings = {
 
 export type StoreInformation = {
   content: string;
-  booking_instruction: string;
-  delivery_instruction: string;
+  green_booking_instruction: string;
+  green_delivery_instruction: string;
+  beige_booking_instruction: string;
+  beige_delivery_instruction: string;
 };
 
 export function usePaymentSettings() {
@@ -45,14 +47,16 @@ export function useStoreInformation() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_information")
-        .select("content, booking_instruction, delivery_instruction")
+        .select("content, green_booking_instruction, green_delivery_instruction, beige_booking_instruction, beige_delivery_instruction")
         .eq("id", 1)
         .maybeSingle();
       if (error) throw error;
       return {
         content: data?.content ?? "",
-        booking_instruction: data?.booking_instruction ?? "",
-        delivery_instruction: data?.delivery_instruction ?? "",
+        green_booking_instruction: data?.green_booking_instruction ?? "",
+        green_delivery_instruction: data?.green_delivery_instruction ?? "",
+        beige_booking_instruction: data?.beige_booking_instruction ?? "",
+        beige_delivery_instruction: data?.beige_delivery_instruction ?? "",
       } satisfies StoreInformation;
     },
   });

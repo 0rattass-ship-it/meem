@@ -449,23 +449,35 @@ export type Database = {
       }
       store_information: {
         Row: {
+          beige_booking_instruction: string
+          beige_delivery_instruction: string
           booking_instruction: string
           content: string
           delivery_instruction: string
+          green_booking_instruction: string
+          green_delivery_instruction: string
           id: number
           updated_at: string
         }
         Insert: {
+          beige_booking_instruction?: string
+          beige_delivery_instruction?: string
           booking_instruction?: string
           content?: string
           delivery_instruction?: string
+          green_booking_instruction?: string
+          green_delivery_instruction?: string
           id?: number
           updated_at?: string
         }
         Update: {
+          beige_booking_instruction?: string
+          beige_delivery_instruction?: string
           booking_instruction?: string
           content?: string
           delivery_instruction?: string
+          green_booking_instruction?: string
+          green_delivery_instruction?: string
           id?: number
           updated_at?: string
         }
