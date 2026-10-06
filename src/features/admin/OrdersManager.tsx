@@ -10,8 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice, type CartAddon } from "@/lib/cart";
-import { ORDER_STATUSES, dayLabel, normalizedOrderStatus, statusLabel } from "@/lib/store-data";
+import { formatPrice, type CartAddon } from "@/features/store/cart";
+import { ORDER_STATUSES, dayLabel, normalizedOrderStatus, statusLabel } from "@/data/store-data";
 
 type OrderItem = {
   id: string;

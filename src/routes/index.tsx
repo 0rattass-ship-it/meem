@@ -22,12 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCart, formatPrice, type CartAddon } from "@/lib/cart";
-import { ProductImage } from "@/lib/product-image";
-import { InstallAppButton } from "@/components/InstallAppButton";
+import { useCart, formatPrice, type CartAddon } from "@/features/store/cart";
+import { ProductImage } from "@/features/store/product-image";
+import { InstallAppButton } from "@/features/customer/InstallAppButton";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerLoginDialog } from "@/components/CustomerLoginDialog";
-import { CustomerProfileDialog } from "@/components/CustomerProfileDialog";
+import { CustomerLoginDialog } from "@/features/customer/CustomerLoginDialog";
+import { CustomerProfileDialog } from "@/features/customer/CustomerProfileDialog";
 
 import {
   dayLabel,
@@ -40,7 +40,7 @@ import {
   useProducts,
   type Product,
   type ProductBadge,
-} from "@/lib/store-data";
+} from "@/data/store-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -89,6 +89,7 @@ function StorePage() {
       deliveryTime: string | null;
     }>
   >([]);
+  const [ordersLoadError, setOrdersLoadError] = useState(false);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -107,6 +108,7 @@ function StorePage() {
     if (!user) {
       setProfile(null);
       setSavedOrders([]);
+      setOrdersLoadError(false);
       setAuthLoading(false);
       return;
     }
@@ -121,19 +123,23 @@ function StorePage() {
       email: user.email ?? "",
     });
 
-    /*
-     * تحميل آخر 10 طلبات.
-     *
-     * لا نستخدم user_id هنا لأن الطلبات الحالية قد لا تحتوي
-     * على user_id، ولذلك كان قسم "طلباتي" يظهر فارغًا.
-     */
-    const { data: orders } = await supabase
+    // Only show orders linked to the signed-in customer account.
+    setOrdersLoadError(false);
+    const { data: orders, error } = await supabase
       .from("orders")
       .select(
         "order_number, created_at, status, booking_day, delivery_time",
       )
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Loading customer orders failed:", error);
+      setSavedOrders([]);
+      setOrdersLoadError(true);
+      setAuthLoading(false);
+      return;
+    }
 
     setSavedOrders(
       (orders ?? []).map((order) => ({
@@ -407,11 +413,14 @@ function StorePage() {
 
           <button
             type="button"
-            onClick={() =>
-              profile
-                ? setOrdersOpen(true)
-                : setLoginOpen(true)
-            }
+            onClick={() => {
+              if (profile) {
+                void loadCustomerData();
+                setOrdersOpen(true);
+              } else {
+                setLoginOpen(true);
+              }
+            }}
             className="flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-xs font-semibold text-primary-foreground/80 transition-colors hover:text-primary-foreground"
           >
             <ClipboardList className="size-5" />
@@ -455,7 +464,7 @@ function StorePage() {
             <DialogTitle>طلباتي</DialogTitle>
 
             <DialogDescription>
-              آخر 10 طلبات في حسابك.
+              جميع الطلبات المرتبطة بحسابك.
             </DialogDescription>
           </DialogHeader>
 
@@ -463,6 +472,15 @@ function StorePage() {
             <p className="py-6 text-center text-muted-foreground">
               جاري تحميل الطلبات…
             </p>
+          ) : ordersLoadError ? (
+            <div className="space-y-3 py-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                تعذّر تحميل طلباتك. تحقق من اتصال الإنترنت وحاول مجددًا.
+              </p>
+              <Button variant="outline" onClick={() => void loadCustomerData()}>
+                إعادة المحاولة
+              </Button>
+            </div>
           ) : savedOrders.length === 0 ? (
             <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
               لا توجد طلبات في حسابك بعد.

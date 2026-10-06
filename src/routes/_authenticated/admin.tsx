@@ -5,12 +5,12 @@ import { LogOut, ShieldCheck, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { CategoriesManager } from "@/components/admin/CategoriesManager";
-import { ProductsManager } from "@/components/admin/ProductsManager";
-import { AddonsManager } from "@/components/admin/AddonsManager";
-import { OrdersManager } from "@/components/admin/OrdersManager";
-import { DeliverySettingsManager } from "@/components/admin/DeliverySettingsManager";
-import { StatisticsManager } from "@/components/admin/StatisticsManager";
+import { CategoriesManager } from "@/features/admin/CategoriesManager";
+import { ProductsManager } from "@/features/admin/ProductsManager";
+import { AddonsManager } from "@/features/admin/AddonsManager";
+import { OrdersManager } from "@/features/admin/OrdersManager";
+import { DeliverySettingsManager } from "@/features/admin/DeliverySettingsManager";
+import { StatisticsManager } from "@/features/admin/StatisticsManager";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/cart";
+import { formatPrice } from "@/features/store/cart";
 
 type TopProduct = [
   string,
@@ -32,32 +32,43 @@ type Statistics = {
   monthLabel: string;
 };
 
+function normalizeStatistics(payload: Partial<Statistics> | null | undefined): Statistics {
+  const monthLabel =
+    typeof payload?.monthLabel === "string" && payload.monthLabel.trim()
+      ? payload.monthLabel
+      : new Date().toISOString().slice(0, 7);
+
+  const monthDate = new Date(`${monthLabel}-01T00:00:00`);
+
+  return {
+    orderCount: Number(payload?.orderCount ?? 0),
+    revenue: Number(payload?.revenue ?? 0),
+    monthOrderCount: Number(payload?.monthOrderCount ?? 0),
+    monthRevenue: Number(payload?.monthRevenue ?? 0),
+    uniqueVisitors: Number(payload?.uniqueVisitors ?? 0),
+    totalVisits: Number(payload?.totalVisits ?? 0),
+    topProducts: Array.isArray(payload?.topProducts)
+      ? (payload.topProducts as TopProduct[])
+      : [],
+    monthTopProducts: Array.isArray(payload?.monthTopProducts)
+      ? (payload.monthTopProducts as TopProduct[])
+      : [],
+    monthLabel: monthDate.toLocaleDateString("ar-YE", {
+      month: "long",
+      year: "numeric",
+    }),
+  };
+}
+
 export function StatisticsManager() {
   const stats = useQuery({
     queryKey: ["admin-statistics"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc(
-        "get_admin_statistics_v2",
-        {
-          p_request: "statistics",
-        },
-      );
+      const { data, error } = await supabase.rpc("get_admin_statistics", {});
 
       if (error) throw error;
 
-      const result = data as unknown as Statistics;
-
-      const monthDate = new Date(
-        `${result.monthLabel}-01T00:00:00`,
-      );
-
-      return {
-        ...result,
-        monthLabel: monthDate.toLocaleDateString("ar-YE", {
-          month: "long",
-          year: "numeric",
-        }),
-      };
+      return normalizeStatistics(data as Partial<Statistics> | null);
     },
     retry: 3,
     retryDelay: (attempt) =>

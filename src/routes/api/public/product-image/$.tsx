@@ -11,17 +11,25 @@ export const Route = createFileRoute("/api/public/product-image/$")({
           return new Response("Not found", { status: 404 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data, error } = await supabaseAdmin.storage.from("product-images").download(path);
+        const supabaseUrl = process.env["SUPABASE_URL"];
+        if (!supabaseUrl) {
+          return new Response("Storage is not configured", { status: 503 });
+        }
 
-        if (error || !data) {
+        const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+        const imageResponse = await fetch(
+          `${supabaseUrl}/storage/v1/object/public/product-images/${encodedPath}`,
+        );
+
+        if (!imageResponse.ok || !imageResponse.body) {
           return new Response("Not found", { status: 404 });
         }
 
-        return new Response(await data.arrayBuffer(), {
+        return new Response(imageResponse.body, {
           headers: {
-            "Content-Type": data.type || "image/jpeg",
+            "Content-Type": imageResponse.headers.get("content-type") || "image/jpeg",
             "Cache-Control": "public, max-age=31536000, immutable",
+            "X-Content-Type-Options": "nosniff",
           },
         });
       },

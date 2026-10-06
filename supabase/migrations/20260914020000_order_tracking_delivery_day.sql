@@ -20,7 +20,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path TO 'public'
+SET search_path TO 'public', 'extensions'
 AS $function$
   SELECT
     o.order_number,

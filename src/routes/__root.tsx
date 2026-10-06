@@ -11,10 +11,10 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
-import { CartProvider } from "../lib/cart";
+import { reportRuntimeError } from "../lib/lovable-error-reporting";
+import { CartProvider } from "../features/store/cart";
 import { Toaster } from "../components/ui/sonner";
-import { AppSplashScreen } from "../components/AppSplashScreen";
+import { AppSplashScreen } from "../features/customer/AppSplashScreen";
 
 function NotFoundComponent() {
   return (
@@ -42,7 +42,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportRuntimeError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (

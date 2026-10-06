@@ -24,7 +24,7 @@ import {
   usePaymentSettings,
   type DeliveryLocation,
   type DeliveryTime,
-} from "@/lib/store-data";
+} from "@/data/store-data";
 
 
 export function DeliverySettingsManager() {

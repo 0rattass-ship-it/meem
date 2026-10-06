@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/cart";
-import { useAddons, useProductAddons, useProducts, type Addon } from "@/lib/store-data";
+import { formatPrice } from "@/features/store/cart";
+import { useAddons, useProductAddons, useProducts, type Addon } from "@/data/store-data";
 
 export function AddonsManager() {
   const addons = useAddons();

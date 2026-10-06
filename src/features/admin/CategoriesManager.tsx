@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useCategories, type Category } from "@/lib/store-data";
+import { useCategories, type Category } from "@/data/store-data";
 
 export function CategoriesManager() {
   const { data = [], isLoading } = useCategories(true);

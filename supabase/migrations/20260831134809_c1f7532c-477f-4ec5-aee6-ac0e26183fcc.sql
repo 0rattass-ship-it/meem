@@ -154,32 +154,3 @@ CREATE POLICY "order_items guest insert" ON public.order_items FOR INSERT TO ano
 CREATE POLICY "order_items admin read" ON public.order_items FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'admin'));
 CREATE POLICY "order_items admin write" ON public.order_items FOR UPDATE TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE POLICY "order_items admin delete" ON public.order_items FOR DELETE TO authenticated USING (public.has_role(auth.uid(),'admin'));
-
--- seed demo data
-INSERT INTO public.categories (id, name, sort_order) VALUES
-  ('11111111-1111-1111-1111-111111111111','الوجبات السريعة',1),
-  ('22222222-2222-2222-2222-222222222222','الساندويتشات',2),
-  ('33333333-3333-3333-3333-333333333333','العصائر',3),
-  ('44444444-4444-4444-4444-444444444444','الحلويات',4);
-
-INSERT INTO public.products (id, category_id, name, description, price, sort_order) VALUES
-  ('aaaaaaa1-0000-0000-0000-000000000001','11111111-1111-1111-1111-111111111111','بطاطس','بطاطس مقرمشة طازجة',500,1),
-  ('aaaaaaa1-0000-0000-0000-000000000002','11111111-1111-1111-1111-111111111111','اندومي عادي','اندومي ساخن',500,2),
-  ('aaaaaaa1-0000-0000-0000-000000000003','22222222-2222-2222-2222-222222222222','ساندويتش بيض','بيض مع خبز طازج',400,1),
-  ('aaaaaaa1-0000-0000-0000-000000000004','33333333-3333-3333-3333-333333333333','عصير ليمون','ليمون طازج بالنعناع',500,1),
-  ('aaaaaaa1-0000-0000-0000-000000000005','44444444-4444-4444-4444-444444444444','كيك شوكولاتة','قطعة كيك غنية',700,1);
-
-INSERT INTO public.addons (id, name, price) VALUES
-  ('bbbbbbb1-0000-0000-0000-000000000001','شطة',50),
-  ('bbbbbbb1-0000-0000-0000-000000000002','جبن',150),
-  ('bbbbbbb1-0000-0000-0000-000000000003','صوص',100),
-  ('bbbbbbb1-0000-0000-0000-000000000004','بطاطس',200);
-
-INSERT INTO public.product_addons (product_id, addon_id) VALUES
-  ('aaaaaaa1-0000-0000-0000-000000000001','bbbbbbb1-0000-0000-0000-000000000001'),
-  ('aaaaaaa1-0000-0000-0000-000000000001','bbbbbbb1-0000-0000-0000-000000000003'),
-  ('aaaaaaa1-0000-0000-0000-000000000002','bbbbbbb1-0000-0000-0000-000000000001'),
-  ('aaaaaaa1-0000-0000-0000-000000000002','bbbbbbb1-0000-0000-0000-000000000002'),
-  ('aaaaaaa1-0000-0000-0000-000000000003','bbbbbbb1-0000-0000-0000-000000000002'),
-  ('aaaaaaa1-0000-0000-0000-000000000003','bbbbbbb1-0000-0000-0000-000000000003'),
-  ('aaaaaaa1-0000-0000-0000-000000000003','bbbbbbb1-0000-0000-0000-000000000004');

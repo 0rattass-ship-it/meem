@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerLoginDialog } from "@/components/CustomerLoginDialog";
-import { formatPrice, itemUnitTotal, useCart } from "@/lib/cart";
+import { CustomerLoginDialog } from "@/features/customer/CustomerLoginDialog";
+import { formatPrice, itemUnitTotal, useCart } from "@/features/store/cart";
 import {
   commonBookingDays,
   dayLabel,
@@ -33,7 +33,7 @@ import {
   statusLabel,
   normalizedOrderStatus,
   ORDER_STATUS_STEPS,
-} from "@/lib/store-data";
+} from "@/data/store-data";
 
 
 export const Route = createFileRoute("/checkout")({
@@ -216,32 +216,56 @@ function CheckoutPage() {
 
     const trackingToken = createTrackingToken();
     setSending(true);
-    const { data, error } = await supabase.rpc("place_order_with_payment", {
-      _customer_name: parsed.data.customer_name,
-      _address: parsed.data.address ?? "",
-      _notes: parsed.data.notes ?? "",
-      _payment_method: paymentMethod,
-      _tracking_token: trackingToken,
-      ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
-      ...(locationId ? { _delivery_location_id: locationId } : {}),
-      ...(autoDay === null ? {} : { _booking_day: autoDay }),
-      _items: cart.items.map((item) => ({
-        product_id: item.productId,
-        quantity: item.quantity,
-        addon_ids: item.addons.map((a) => a.id),
-      })),
-    });
+    try {
+      const { data, error } = await supabase.rpc("place_order_with_payment", {
+        _customer_name: parsed.data.customer_name,
+        _address: parsed.data.address ?? "",
+        _notes: parsed.data.notes ?? "",
+        _payment_method: paymentMethod,
+        _tracking_token: trackingToken,
+        ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
+        ...(locationId ? { _delivery_location_id: locationId } : {}),
+        ...(autoDay === null ? {} : { _booking_day: autoDay }),
+        _items: cart.items.map((item) => ({
+          product_id: item.productId,
+          quantity: item.quantity,
+          addon_ids: item.addons.map((addon) => addon.id),
+        })),
+      });
 
-    setSending(false);
+      if (error) {
+        console.error("Order submission failed:", error);
+        const knownErrors: Record<string, string> = {
+          invalid_name: "الاسم غير صالح، تحقق من الاسم وحاول مجددًا",
+          invalid_items: "السلة غير صالحة أو فارغة، حدّث الصفحة وحاول مجددًا",
+          invalid_product: "أحد المنتجات لم يعد متاحًا، حدّث السلة وحاول مجددًا",
+          invalid_addon: "إحدى الإضافات لم تعد متاحة، حدّث السلة وحاول مجددًا",
+          addon_required: "اختر الإضافة المطلوبة لهذا المنتج",
+          invalid_delivery_time: "وقت التسليم لم يعد متاحًا، اختر وقتًا آخر",
+          invalid_delivery_location: "مكان التسليم لم يعد متاحًا، اختر مكانًا آخر",
+          product_day_unavailable: "أحد المنتجات غير متاح في يوم التسليم المحدد",
+          product_time_unavailable: "وقت التسليم غير متاح لأحد المنتجات",
+          payment_window_not_configured: "لم يتم إعداد موعد الدفع في المشرب بعد",
+          PGRST202: "تعذّر الاتصال بخدمة الطلبات، حدّث الصفحة وحاول مجددًا",
+        };
+        toast.error(knownErrors[error.message] ?? "تعذّر إرسال الطلب، تحقق من اتصال الإنترنت وحاول مجددًا");
+        return;
+      }
+      if (!data || typeof data !== "object" || !("order_number" in data)) {
+        toast.error("لم يصل تأكيد الطلب من الخادم، تحقق من طلباتك قبل إعادة الإرسال");
+        return;
+      }
 
-    if (error || !data || typeof data !== "object" || !("order_number" in data)) {
-      toast.error("تعذّر إرسال الطلب، حاول مرة أخرى");
-      return;
+      const result = data as { order_number: number; total: number; payment_method: string };
+      setCustomerProfile({ name: parsed.data.customer_name, email: customerProfile?.email ?? "" });
+      cart.clear();
+      setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
+    } catch (error) {
+      console.error("Order submission failed:", error);
+      toast.error("تعذّر الاتصال بالخادم لإرسال الطلب، تحقق من الإنترنت وحاول مجددًا");
+    } finally {
+      setSending(false);
     }
-    const result = data as { order_number: number; total: number; payment_method: string };
-    setCustomerProfile({ name: parsed.data.customer_name, email: (await supabase.auth.getUser()).data.user?.email ?? "" });
-    cart.clear();
-    setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
   }
 
 

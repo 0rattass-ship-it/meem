@@ -18,7 +18,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/cart";
+import { formatPrice } from "@/features/store/cart";
 import {
   PRODUCT_BADGES,
   WEEK_DAYS,
@@ -32,13 +32,13 @@ import {
   useProducts,
   type Product,
   type ProductBadge,
-} from "@/lib/store-data";
+} from "@/data/store-data";
 import {
   BUCKET,
   IMAGE_PREFIX,
   ProductImage,
   storagePathFromUrl,
-} from "@/lib/product-image";
+} from "@/features/store/product-image";
 
 
 export function ProductsManager() {

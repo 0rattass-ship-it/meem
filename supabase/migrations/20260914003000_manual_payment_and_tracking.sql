@@ -2,7 +2,7 @@
 -- This migration is intentionally non-destructive: it only adds columns, a settings
 -- row/table, and SECURITY DEFINER RPCs. It does not delete or reset existing data.
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 CREATE TABLE IF NOT EXISTS public.payment_settings (
   id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
