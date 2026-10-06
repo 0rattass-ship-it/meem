@@ -462,7 +462,7 @@ function StorePage() {
                 bookingText={storeInfo.data.beige_booking_instruction}
                 deliveryText={storeInfo.data.beige_delivery_instruction}
               />
-              {storeInfo.data.content.trim() && (
+              {storeInfo.data.content?.trim() && (
                 <div className="whitespace-pre-line border-t border-border pt-4 text-sm leading-7 text-muted-foreground">
                   {storeInfo.data.content}
                 </div>
@@ -611,8 +611,8 @@ function InstructionRow({
   deliveryText,
 }: {
   color: "green" | "beige";
-  bookingText: string;
-  deliveryText: string;
+  bookingText?: string | null;
+  deliveryText?: string | null;
 }) {
   return (
     <div className="flex min-h-20 items-stretch gap-4 rounded-xl bg-surface p-4">
@@ -621,8 +621,8 @@ function InstructionRow({
         className={`w-2 shrink-0 rounded-full ${color === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`}
       />
       <div className="self-center space-y-2 text-sm leading-7 text-foreground">
-        <p className="whitespace-pre-line"><span className="font-bold">الحجز:</span>{" "}{bookingText.trim() || "لم يُحدد الموعد بعد"}</p>
-        <p className="whitespace-pre-line"><span className="font-bold">التسليم:</span>{" "}{deliveryText.trim() || "لم يُحدد الموعد بعد"}</p>
+        <p className="whitespace-pre-line"><span className="font-bold">الحجز:</span>{" "}{bookingText?.trim() || "لم يُحدد الموعد بعد"}</p>
+        <p className="whitespace-pre-line"><span className="font-bold">التسليم:</span>{" "}{deliveryText?.trim() || "لم يُحدد الموعد بعد"}</p>
       </div>
     </div>
   );
