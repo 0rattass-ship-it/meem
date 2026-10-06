@@ -44,6 +44,14 @@ export function useStoreInformation() {
   return useQuery({
     ...publicQueryOptions,
     queryKey: ["store-information"],
+    // Normalize cached records too: older sessions may predate the four schedule fields.
+    select: (data): StoreInformation => ({
+      content: data?.content ?? "",
+      green_booking_instruction: data?.green_booking_instruction ?? "",
+      green_delivery_instruction: data?.green_delivery_instruction ?? "",
+      beige_booking_instruction: data?.beige_booking_instruction ?? "",
+      beige_delivery_instruction: data?.beige_delivery_instruction ?? "",
+    }),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_information")
