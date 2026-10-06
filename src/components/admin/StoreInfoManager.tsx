@@ -11,15 +11,19 @@ export function StoreInfoManager() {
   const info = useStoreInformation();
   const qc = useQueryClient();
   const [content, setContent] = useState("");
-  const [bookingInstruction, setBookingInstruction] = useState("");
-  const [deliveryInstruction, setDeliveryInstruction] = useState("");
+  const [greenBookingInstruction, setGreenBookingInstruction] = useState("");
+  const [greenDeliveryInstruction, setGreenDeliveryInstruction] = useState("");
+  const [beigeBookingInstruction, setBeigeBookingInstruction] = useState("");
+  const [beigeDeliveryInstruction, setBeigeDeliveryInstruction] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (info.data !== undefined) {
       setContent(info.data.content);
-      setBookingInstruction(info.data.booking_instruction);
-      setDeliveryInstruction(info.data.delivery_instruction);
+      setGreenBookingInstruction(info.data.green_booking_instruction);
+      setGreenDeliveryInstruction(info.data.green_delivery_instruction);
+      setBeigeBookingInstruction(info.data.beige_booking_instruction);
+      setBeigeDeliveryInstruction(info.data.beige_delivery_instruction);
     }
   }, [info.data]);
 
@@ -30,8 +34,10 @@ export function StoreInfoManager() {
       .upsert({
         id: 1,
         content: content.slice(0, 5000),
-        booking_instruction: bookingInstruction.slice(0, 1000),
-        delivery_instruction: deliveryInstruction.slice(0, 1000),
+        green_booking_instruction: greenBookingInstruction.slice(0, 1000),
+        green_delivery_instruction: greenDeliveryInstruction.slice(0, 1000),
+        beige_booking_instruction: beigeBookingInstruction.slice(0, 1000),
+        beige_delivery_instruction: beigeDeliveryInstruction.slice(0, 1000),
         updated_at: new Date().toISOString(),
       });
     setSaving(false);
@@ -48,28 +54,30 @@ export function StoreInfoManager() {
       <div>
         <h2 className="text-lg font-bold text-primary">التعليمات والملاحظات</h2>
         <p className="text-sm text-muted-foreground">
-          النصان الأولان يظهران للعملاء عند الضغط على زر «التعليمات» أعلى المتجر.
+          مواعيد كل شريط تظهر للعملاء عند الضغط على زر «التعليمات» أعلى المتجر.
         </p>
       </div>
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground">تعليمات الحجز</label>
-        <Textarea
-          rows={3}
-          value={bookingInstruction}
-          onChange={(e) => setBookingInstruction(e.target.value)}
-          placeholder="مثال: الحجز يومي السبت والثلاثاء"
-          disabled={info.isLoading}
-        />
+      <div className="space-y-4 border-r-4 border-schedule-green pr-4">
+        <h3 className="font-bold text-foreground">الشريط الأخضر</h3>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-foreground">موعد الحجز</label>
+          <Textarea rows={2} value={greenBookingInstruction} onChange={(e) => setGreenBookingInstruction(e.target.value)} placeholder="مثال: الحجز يوم السبت والثلاثاء" disabled={info.isLoading} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-foreground">موعد التسليم</label>
+          <Textarea rows={2} value={greenDeliveryInstruction} onChange={(e) => setGreenDeliveryInstruction(e.target.value)} placeholder="مثال: التسليم يوم الاثنين والخميس" disabled={info.isLoading} />
+        </div>
       </div>
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground">تعليمات التسليم</label>
-        <Textarea
-          rows={3}
-          value={deliveryInstruction}
-          onChange={(e) => setDeliveryInstruction(e.target.value)}
-          placeholder="مثال: التسليم يومي الإثنين والخميس"
-          disabled={info.isLoading}
-        />
+      <div className="space-y-4 border-r-4 border-schedule-beige pr-4">
+        <h3 className="font-bold text-foreground">الشريط البيج</h3>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-foreground">موعد الحجز</label>
+          <Textarea rows={2} value={beigeBookingInstruction} onChange={(e) => setBeigeBookingInstruction(e.target.value)} placeholder="مثال: الحجز يوم الأحد والأربعاء" disabled={info.isLoading} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-foreground">موعد التسليم</label>
+          <Textarea rows={2} value={beigeDeliveryInstruction} onChange={(e) => setBeigeDeliveryInstruction(e.target.value)} placeholder="مثال: التسليم يوم الاثنين والخميس" disabled={info.isLoading} />
+        </div>
       </div>
       <div className="space-y-2 border-t border-border pt-4">
         <label className="text-sm font-semibold text-foreground">ملاحظات إضافية</label>
