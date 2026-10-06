@@ -249,10 +249,10 @@ function StorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <header className="border-b border-border bg-card/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
+      <header className="bg-background">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3 px-4 py-5">
           <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
-            <Store className="size-7" />
+            <Home className="size-7" />
           </div>
 
           <div className="flex-1">
@@ -266,9 +266,8 @@ function StorePage() {
 
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
               size="sm"
-              className="gap-2 rounded-full"
+              className="gap-2 rounded-full px-5"
               onClick={() => setInfoOpen(true)}
             >
               <Info className="size-4" />
@@ -294,7 +293,7 @@ function StorePage() {
         </div>
       </header>
 
-      <nav className="border-b border-border bg-surface">
+      <nav className="bg-background">
         <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-3">
           <div className="flex gap-2">
             <CategoryChip
@@ -639,16 +638,17 @@ function CategoryChip({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+      variant="ghost"
+      className={`h-10 shrink-0 rounded-full px-5 text-sm font-bold transition-colors ${
         active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-secondary-foreground hover:bg-accent"
+          ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+          : "bg-card text-secondary-foreground hover:bg-accent"
       }`}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -668,15 +668,11 @@ function ProductCard({
     .reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="card-soft relative flex flex-col overflow-hidden p-3">
-      <div className="absolute right-1.5 top-[55%] z-10 -translate-y-1/2" aria-hidden="true">
-        {product.card_stripe_primary !== "hidden" && (
-          <span className={`h-12 w-1.5 rounded-full ${product.card_stripe_primary === "beige" ? "bg-schedule-beige" : "bg-schedule-green"}`} />
-        )}
-      </div>
-      <button
+    <div className="relative flex flex-col overflow-hidden rounded-3xl border-[6px] border-border bg-card p-2 shadow-[var(--shadow-soft)]">
+      <Button
+        variant="ghost"
         onClick={onOpen}
-        className="relative mb-3 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
+        className="relative mb-2 flex h-auto aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-muted p-0"
       >
         <ProductBadgeTag
           badge={product.badge}
@@ -692,27 +688,31 @@ function ProductCard({
             <UtensilsCrossed className="size-10 text-brand-soft" />
           }
         />
-      </button>
+      </Button>
 
-      <button
+      <Button
+        variant="ghost"
         onClick={onOpen}
-        className="text-center"
+        className="relative flex h-auto min-h-14 flex-col items-start gap-0 whitespace-normal rounded-none py-0 pr-4 pl-1 text-right hover:bg-transparent"
       >
-        <h3 className="font-bold text-foreground">
+        {product.card_stripe_primary !== "hidden" && (
+          <span aria-hidden="true" className={`absolute right-0 top-1 bottom-1 block w-2 rounded-full ${product.card_stripe_primary === "beige" ? "bg-schedule-beige" : "bg-schedule-green"}`} />
+        )}
+        <h3 className="w-full break-words text-base font-bold leading-6 text-foreground">
           {product.name}
         </h3>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="w-full text-sm leading-6 text-muted-foreground">
           {formatPrice(Number(product.price))}
         </p>
-      </button>
+      </Button>
 
       {!product.is_available ? (
         <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
       ) : (
-        <div className="mt-3">
+        <div className="mt-2">
           <Button
             onClick={onOpen}
             className="w-full rounded-full"
