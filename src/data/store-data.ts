@@ -16,6 +16,14 @@ export type PaymentSettings = {
   payment_window: string;
 };
 
+export type StoreInformation = {
+  content: string;
+  green_booking_instruction: string;
+  green_delivery_instruction: string;
+  beige_booking_instruction: string;
+  beige_delivery_instruction: string;
+};
+
 export function usePaymentSettings() {
   return useQuery({
     ...publicQueryOptions,
@@ -28,6 +36,36 @@ export function usePaymentSettings() {
         .maybeSingle();
       if (error) throw error;
       return (data ?? { account_holder_name: "", account_number: "", payment_window: "" }) as PaymentSettings;
+    },
+  });
+}
+
+export function useStoreInformation() {
+  return useQuery({
+    ...publicQueryOptions,
+    queryKey: ["store-information"],
+    // Normalize cached records too: older sessions may predate the four schedule fields.
+    select: (data): StoreInformation => ({
+      content: data?.content ?? "",
+      green_booking_instruction: data?.green_booking_instruction ?? "",
+      green_delivery_instruction: data?.green_delivery_instruction ?? "",
+      beige_booking_instruction: data?.beige_booking_instruction ?? "",
+      beige_delivery_instruction: data?.beige_delivery_instruction ?? "",
+    }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_information")
+        .select("content, green_booking_instruction, green_delivery_instruction, beige_booking_instruction, beige_delivery_instruction")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return {
+        content: data?.content ?? "",
+        green_booking_instruction: data?.green_booking_instruction ?? "",
+        green_delivery_instruction: data?.green_delivery_instruction ?? "",
+        beige_booking_instruction: data?.beige_booking_instruction ?? "",
+        beige_delivery_instruction: data?.beige_delivery_instruction ?? "",
+      } satisfies StoreInformation;
     },
   });
 }
@@ -51,6 +89,8 @@ export type Product = {
   sort_order: number;
   badge: ProductBadge;
   addons_required: boolean;
+  card_stripe_primary: "green" | "beige" | "hidden";
+  card_stripe_secondary: "green" | "beige" | "hidden";
 };
 
 export type Addon = {

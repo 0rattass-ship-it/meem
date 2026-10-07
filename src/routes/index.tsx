@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Home,
+  Store,
   UtensilsCrossed,
   ShoppingCart,
   Plus,
@@ -10,6 +11,7 @@ import {
   CalendarClock,
   ClipboardList,
   UserRound,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,7 +42,12 @@ import {
   useProducts,
   type Product,
   type ProductBadge,
+  useProducts,
+  type Product,
+  type ProductBadge,
+  useStoreInformation,
 } from "@/data/store-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,9 +67,8 @@ export const Route = createFileRoute("/")({
         content:
           "قائمة مِيم | MEEM: وجبات سريعة، ساندويتشات، عصائر وحلويات.",
       },
-      { property: "og:image", content: "/og-image.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: StorePage,
@@ -98,6 +104,8 @@ function StorePage() {
     email: string;
   } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const storeInfo = useStoreInformation();
 
   async function loadCustomerData() {
     setAuthLoading(true);
@@ -140,6 +148,7 @@ function StorePage() {
       setAuthLoading(false);
       return;
     }
+
 
     setSavedOrders(
       (orders ?? []).map((order) => ({
@@ -262,12 +271,35 @@ function StorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <header className="bg-card/80 backdrop-blur">
-        <div className="mx-auto max-w-3xl px-4 pt-5">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+      <header className="bg-background">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3 px-4 py-5">
+          <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]">
+            <Home className="size-7" />
+          </div>
+
+          <div className="flex-1">
+            <h1 className="text-2xl font-extrabold text-primary">
+              مِيم | MEEM
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              اختر طلبك وأرسله مباشرة
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
               size="sm"
-              className="shrink-0 rounded-full px-5"
+              className="gap-2 rounded-full px-5"
+              onClick={() => setInfoOpen(true)}
+            >
+              <Info className="size-4" />
+              التعليمات
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-full"
               onClick={() =>
                 profile
                   ? setProfileOpen(true)
@@ -277,35 +309,14 @@ function StorePage() {
               <UserRound className="size-4" />
               {profile ? "بياناتي" : "تسجيل الدخول"}
             </Button>
-
-            <h1 className="truncate text-center text-2xl font-extrabold tracking-wide text-primary">
-              MEEM | ميم
-            </h1>
-
-            <button
-              type="button"
-              aria-label="القائمة الرئيسية"
-              onClick={() =>
-                window.scrollTo({ top: 0, behavior: "smooth" })
-              }
-              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
-            >
-              <Home className="size-6" />
-            </button>
           </div>
 
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            اختر طلبك وأرسله مباشرة
-          </p>
-
-          <div className="mt-2 flex justify-center">
-            <InstallAppButton />
-          </div>
+          <InstallAppButton />
         </div>
       </header>
 
-      <nav className="mt-3">
-        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-2">
+      <nav className="bg-background">
+        <div className="mx-auto max-w-3xl overflow-x-auto px-4 py-3">
           <div className="flex gap-2">
             <CategoryChip
               active={activeCategory === null}
@@ -376,7 +387,8 @@ function StorePage() {
                 key={category.id}
                 className="mb-8"
               >
-                <h2 className="mb-4 text-xl font-extrabold text-foreground">
+                <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-primary">
+                  <UtensilsCrossed className="size-5" />
                   {category.name}
                 </h2>
 
@@ -454,6 +466,40 @@ function StorePage() {
           onSaved={(saved) => setProfile(saved)}
         />
       )}
+
+      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader className="text-right">
+            <DialogTitle>التعليمات</DialogTitle>
+            <DialogDescription>مواعيد الحجز والتسليم المعتمدة من المتجر.</DialogDescription>
+          </DialogHeader>
+          {storeInfo.isLoading ? (
+            <p className="py-6 text-center text-muted-foreground">جاري التحميل…</p>
+          ) : storeInfo.data ? (
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+              <InstructionRow
+                color="green"
+                bookingText={storeInfo.data.green_booking_instruction}
+                deliveryText={storeInfo.data.green_delivery_instruction}
+              />
+              <InstructionRow
+                color="beige"
+                bookingText={storeInfo.data.beige_booking_instruction}
+                deliveryText={storeInfo.data.beige_delivery_instruction}
+              />
+              {storeInfo.data.content?.trim() && (
+                <div className="whitespace-pre-line border-t border-border pt-4 text-sm leading-7 text-muted-foreground">
+                  {storeInfo.data.content}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-surface p-5 text-center text-sm text-muted-foreground">
+              لا توجد تعليمات حالياً.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={ordersOpen}
@@ -593,6 +639,29 @@ function ProductBadgeTag({
   );
 }
 
+function InstructionRow({
+  color,
+  bookingText,
+  deliveryText,
+}: {
+  color: "green" | "beige";
+  bookingText?: string | null;
+  deliveryText?: string | null;
+}) {
+  return (
+    <div className="flex min-h-20 items-stretch gap-4 rounded-xl bg-surface p-4">
+      <span
+        aria-hidden="true"
+        className={`w-2 shrink-0 rounded-full ${color === "green" ? "bg-schedule-green" : "bg-schedule-beige"}`}
+      />
+      <div className="self-center space-y-2 text-sm leading-7 text-foreground">
+        <p className="whitespace-pre-line"><span className="font-bold">الحجز:</span>{" "}{bookingText?.trim() || "لم يُحدد الموعد بعد"}</p>
+        <p className="whitespace-pre-line"><span className="font-bold">التسليم:</span>{" "}{deliveryText?.trim() || "لم يُحدد الموعد بعد"}</p>
+      </div>
+    </div>
+  );
+}
+
 function CategoryChip({
   label,
   active,
@@ -603,16 +672,17 @@ function CategoryChip({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition-colors ${
+      variant="ghost"
+      className={`h-10 shrink-0 rounded-full px-5 text-sm font-bold transition-colors ${
         active
-          ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
-          : "bg-card text-foreground shadow-sm hover:bg-accent"
+          ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+          : "bg-card text-secondary-foreground hover:bg-accent"
       }`}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -632,10 +702,11 @@ function ProductCard({
     .reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="card-soft flex flex-col overflow-hidden rounded-3xl p-2.5">
-      <button
+    <div className="relative flex flex-col overflow-hidden rounded-3xl border-[6px] border-border bg-card p-2 shadow-[var(--shadow-soft)]">
+      <Button
+        variant="ghost"
         onClick={onOpen}
-        className="relative mb-2 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted"
+        className="relative mb-2 flex h-auto aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-muted p-0"
       >
         <ProductBadgeTag
           badge={product.badge}
@@ -651,30 +722,34 @@ function ProductCard({
             <UtensilsCrossed className="size-10 text-brand-soft" />
           }
         />
-      </button>
+      </Button>
 
-      <button
+      <Button
+        variant="ghost"
         onClick={onOpen}
-        className="px-1 text-center"
+        className="relative flex h-auto min-h-14 flex-col items-start gap-0 whitespace-normal rounded-none py-0 pr-4 pl-1 text-right hover:bg-transparent"
       >
-        <h3 className="text-base font-extrabold text-foreground">
+        {product.card_stripe_primary !== "hidden" && (
+          <span aria-hidden="true" className={`absolute right-0 top-1 bottom-1 block w-2 rounded-full ${product.card_stripe_primary === "beige" ? "bg-schedule-beige" : "bg-schedule-green"}`} />
+        )}
+        <h3 className="w-full break-words text-base font-bold leading-6 text-foreground">
           {product.name}
         </h3>
 
-        <p className="mt-0.5 text-sm text-muted-foreground">
+        <p className="w-full text-sm leading-6 text-muted-foreground">
           {formatPrice(Number(product.price))}
         </p>
-      </button>
+      </Button>
 
       {!product.is_available ? (
-        <p className="mt-2.5 rounded-full bg-muted py-2.5 text-center text-xs font-semibold text-muted-foreground">
+        <p className="mt-3 rounded-full bg-muted py-2 text-center text-xs font-semibold text-muted-foreground">
           غير متوفر حالياً
         </p>
       ) : (
-        <div className="mt-2.5">
+        <div className="mt-2">
           <Button
             onClick={onOpen}
-            className="w-full rounded-full py-5 text-sm font-bold"
+            className="w-full rounded-full"
             size="sm"
           >
             <Plus className="size-4" />

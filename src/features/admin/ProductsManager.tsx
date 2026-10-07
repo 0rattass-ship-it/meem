@@ -74,6 +74,8 @@ export function ProductsManager() {
         description: "",
         badge: "none",
         addons_required: false,
+        card_stripe_primary: "green",
+        card_stripe_secondary: "hidden",
       });
       setDays([]);
       setTimeIds([]);
@@ -147,6 +149,8 @@ export function ProductsManager() {
       sort_order: Number(editing.sort_order ?? 0),
       badge: (editing.badge ?? "none") as ProductBadge,
       addons_required: editing.addons_required ?? false,
+      card_stripe_primary: editing.card_stripe_primary ?? "green",
+      card_stripe_secondary: editing.card_stripe_secondary ?? "beige",
     };
     const { data, error } = editing.id
       ? await supabase.from("products").update(payload).eq("id", editing.id).select("id").single()
@@ -380,6 +384,39 @@ export function ProductsManager() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3 rounded-xl bg-surface p-3">
+              <div>
+                <Label>شريط بطاقة المنتج</Label>
+                <p className="text-xs text-muted-foreground">شريط واحد فقط لكل منتج: اختاري لونه أو أخفيه.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="w-20 text-sm font-semibold">اللون</span>
+                <Select
+                  value={editing?.card_stripe_primary ?? "green"}
+                  onValueChange={(value) => setEditing({ ...editing, card_stripe_primary: value as Product["card_stripe_primary"] })}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="green">أخضر</SelectItem>
+                    <SelectItem value="beige">بيج</SelectItem>
+                    <SelectItem value="hidden">مخفي</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span
+                  aria-hidden="true"
+                  className={`h-8 w-2 rounded-full ${
+                    editing?.card_stripe_primary === "hidden"
+                      ? "bg-muted"
+                      : editing?.card_stripe_primary === "beige"
+                        ? "bg-schedule-beige"
+                        : "bg-schedule-green"
+                  }`}
+                />
+              </div>
             </div>
 
             <div className="space-y-1 rounded-xl bg-surface p-3">

@@ -287,6 +287,10 @@ export type Database = {
         }
         Relationships: []
       }
+
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           account_holder_name: string
@@ -416,6 +420,8 @@ export type Database = {
         Row: {
           addons_required: boolean
           badge: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary: string
+          card_stripe_secondary: string
           category_id: string | null
           created_at: string
           description: string | null
@@ -430,6 +436,8 @@ export type Database = {
         Insert: {
           addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary?: string
+          card_stripe_secondary?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -444,6 +452,8 @@ export type Database = {
         Update: {
           addons_required?: boolean
           badge?: Database["public"]["Enums"]["product_badge"]
+          card_stripe_primary?: string
+          card_stripe_secondary?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -464,6 +474,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_information: {
+        Row: {
+          beige_booking_instruction: string
+          beige_delivery_instruction: string
+          booking_instruction: string
+          content: string
+          delivery_instruction: string
+          green_booking_instruction: string
+          green_delivery_instruction: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          beige_booking_instruction?: string
+          beige_delivery_instruction?: string
+          booking_instruction?: string
+          content?: string
+          delivery_instruction?: string
+          green_booking_instruction?: string
+          green_delivery_instruction?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          beige_booking_instruction?: string
+          beige_delivery_instruction?: string
+          booking_instruction?: string
+          content?: string
+          delivery_instruction?: string
+          green_booking_instruction?: string
+          green_delivery_instruction?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -527,6 +573,17 @@ export type Database = {
           payment_method: string
           payment_status: string
           payment_window: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+        }[]
+      }
+      get_my_orders: {
+        Args: never
+        Returns: {
+          booking_day: number
+          created_at: string
+          delivery_time: string
+          order_number: number
           status: Database["public"]["Enums"]["order_status"]
           total: number
         }[]

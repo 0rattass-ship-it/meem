@@ -256,15 +256,35 @@ function CheckoutPage() {
         return;
       }
 
-      const result = data as { order_number: number; total: number; payment_method: string };
-      setCustomerProfile({ name: parsed.data.customer_name, email: customerProfile?.email ?? "" });
-      cart.clear();
-      setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
-    } catch (error) {
-      console.error("Order submission failed:", error);
-      toast.error("تعذّر الاتصال بالخادم لإرسال الطلب، تحقق من الإنترنت وحاول مجددًا");
-    } finally {
-      setSending(false);
+    if (error || !data || typeof data !== "object" || !("order_number" in data)) {
+      console.error("place_order failed", error);
+      const msg = error?.message ?? "";
+      const reasons: Record<string, string> = {
+        invalid_product: "أحد المنتجات في السلة لم يعد متوفرًا، احذفه من السلة وأعد المحاولة",
+        invalid_addon: "إحدى الإضافات لم تعد متاحة، احذف المنتج وأضفه من جديد",
+        addon_required: "يجب اختيار إضافة واحدة على الأقل لبعض المنتجات",
+        product_day_unavailable: "أحد المنتجات غير متاح في يوم التسليم المحدد",
+        product_time_unavailable: "وقت التسليم المختار غير متاح لأحد المنتجات",
+        invalid_delivery_time: "وقت التسليم لم يعد متاحًا، اختر وقتًا آخر",
+        invalid_delivery_location: "مكان التسليم لم يعد متاحًا، اختر مكانًا آخر",
+        payment_window_not_configured: "لم يتم تحديد وقت الدفع في المشرب بعد",
+        invalid_name: "الاسم غير صحيح",
+      };
+      const key = Object.keys(reasons).find((k) => msg.includes(k));
+      toast.error(key ? reasons[key] : "تعذّر إرسال الطلب، تحقق من الاتصال وحاول مرة أخرى");
+      return;
+    }
+
+    const result = data as { order_number: number; total: number; payment_method: string };
+    setCustomerProfile({ name: parsed.data.customer_name, email: customerProfile?.email ?? "" });
+    cart.clear();
+    setDone({ orderNumber: result.order_number, total: Number(result.total), trackingToken, paymentMethod: result.payment_method });
+  } catch (error) {
+    console.error("Order submission failed:", error);
+    toast.error("تعذّر الاتصال بالخادم لإرسال الطلب، تحقق من الإنترنت وحاول مجددًا");
+  } finally {
+    setSending(false);
+
     }
   }
 
