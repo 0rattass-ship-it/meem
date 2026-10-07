@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { isThreePartName } from "@/lib/full-name";
 
 export function CustomerLoginDialog({
   open,
@@ -31,8 +32,8 @@ export function CustomerLoginDialog({
 
   async function submit() {
     const cleanName = name.trim().replace(/\s+/g, " ");
-    if (cleanName.split(" ").length < 3) {
-      toast.error("أدخل اسمك الثلاثي");
+    if (!isThreePartName(cleanName)) {
+      toast.error("يجب أن يكون اسمك ثلاثي الكلمات فقط، مثل: محمد أحمد علي");
       return;
     }
     const cleanEmail = nameToEmail(cleanName);
@@ -94,6 +95,7 @@ export function CustomerLoginDialog({
           <div className="space-y-2">
             <Label htmlFor="customer-login-name">الاسم الثلاثي</Label>
             <Input id="customer-login-name" value={name} maxLength={80} autoComplete="name" onChange={(e) => setName(e.target.value)} placeholder="مثال: محمد أحمد علي" />
+            <p className="text-xs text-muted-foreground">ثلاث كلمات فقط، بدون أرقام أو رموز.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="customer-login-password">كلمة المرور</Label>
