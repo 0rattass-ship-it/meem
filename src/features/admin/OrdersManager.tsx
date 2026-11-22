@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, type CartAddon } from "@/features/store/cart";
 import { ORDER_STATUSES, dayLabel, normalizedOrderStatus, statusLabel } from "@/data/store-data";
+import { ReceiptDetails } from "./ReceiptDetails";
 
 type OrderItem = {
   id: string;
@@ -37,6 +38,7 @@ type Order = {
   payment_method: string;
   payment_status: string;
   payment_window: string | null;
+  payment_receipt_path: string | null;
   order_items: OrderItem[];
 };
 
@@ -144,6 +146,7 @@ export function OrdersManager() {
                 <p className="text-xs text-muted-foreground">
                   حالة الدفع: {order.payment_status === "paid" ? "تم الدفع" : order.payment_status === "pending_bank_transfer" ? "بانتظار التحقق من التحويل" : order.payment_status === "pending_store_payment" ? "بانتظار الدفع في المشرب" : "غير مؤكد"}
                 </p>
+                {order.payment_receipt_path && <ReceiptDetails path={order.payment_receipt_path} />}
               </div>
               <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
                 {statusLabel(order.status)}

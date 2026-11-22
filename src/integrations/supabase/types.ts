@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -209,13 +209,13 @@ export type Database = {
           booking_day: number | null
           created_at: string
           customer_name: string
-          customer_phone: string | null
           delivery_location: string | null
           delivery_time: string | null
           id: string
           notes: string | null
           order_number: number
           payment_method: string
+          payment_receipt_path: string | null
           payment_status: string
           payment_window: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -229,13 +229,13 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name: string
-          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
           notes?: string | null
           order_number?: number
           payment_method?: string
+          payment_receipt_path?: string | null
           payment_status?: string
           payment_window?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -249,13 +249,13 @@ export type Database = {
           booking_day?: number | null
           created_at?: string
           customer_name?: string
-          customer_phone?: string | null
           delivery_location?: string | null
           delivery_time?: string | null
           id?: string
           notes?: string | null
           order_number?: number
           payment_method?: string
+          payment_receipt_path?: string | null
           payment_status?: string
           payment_window?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -263,31 +263,6 @@ export type Database = {
           tracking_token_hash?: string | null
           updated_at?: string
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      customer_profiles: {
-        Row: {
-          name: string
-          phone: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          name: string
-          phone?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          name?: string
-          phone?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-
         }
         Relationships: []
       }
@@ -532,47 +507,24 @@ export type Database = {
         }
         Relationships: []
       }
-      visitor_sessions: {
-        Row: {
-          first_seen: string
-          id: string
-          last_seen: string
-          session_id: string
-          visit_count: number
-        }
-        Insert: {
-          first_seen?: string
-          id?: string
-          last_seen?: string
-          session_id: string
-          visit_count?: number
-        }
-        Update: {
-          first_seen?: string
-          id?: string
-          last_seen?: string
-          session_id?: string
-          visit_count?: number
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_admin_statistics: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_admin_statistics: { Args: { p_request: string }; Returns: Json }
+      get_admin_statistics_v2: { Args: { p_request: string }; Returns: Json }
       get_my_order_tracking: {
         Args: { _order_number: number }
         Returns: {
-          booking_day: number | null
+          booking_day: number
           created_at: string
           customer_name: string
-          delivery_time: string | null
+          delivery_time: string
           order_number: number
           payment_method: string
           payment_status: string
-          payment_window: string | null
+          payment_window: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
         }[]
@@ -591,14 +543,15 @@ export type Database = {
       get_order_tracking: {
         Args: { _order_number: number; _tracking_token: string }
         Returns: {
-          booking_day: number | null
+          booking_day: number
           created_at: string
           customer_name: string
-          delivery_time: string | null
+          delivery_location: string
+          delivery_time: string
           order_number: number
           payment_method: string
           payment_status: string
-          payment_window: string | null
+          payment_window: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
         }[]
@@ -610,16 +563,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      record_visitor_session: {
-        Args: { _session_id: string }
-        Returns: undefined
-      }
       place_order: {
         Args: {
           _address: string
           _booking_day?: number
           _customer_name: string
-          _customer_phone: string
           _delivery_location_id?: string
           _delivery_time_id?: string
           _items: Json
@@ -632,12 +580,26 @@ export type Database = {
           _address: string
           _booking_day?: number
           _customer_name: string
-          _customer_phone?: string | null
           _delivery_location_id?: string
           _delivery_time_id?: string
           _items: Json
           _notes: string
           _payment_method: string
+          _tracking_token: string
+        }
+        Returns: Json
+      }
+      place_order_with_receipt: {
+        Args: {
+          _address: string
+          _booking_day?: number
+          _customer_name: string
+          _delivery_location_id?: string
+          _delivery_time_id?: string
+          _items: Json
+          _notes: string
+          _payment_method: string
+          _receipt_path?: string
           _tracking_token: string
         }
         Returns: Json

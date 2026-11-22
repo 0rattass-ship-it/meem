@@ -19,7 +19,7 @@ test("يخزّن اسم العميل دون بريد إلكتروني أو كل�
     value: new MemoryStorage(),
   });
 
-  saveCustomerProfile({ name: "محمد أحمد علي" });
+  saveCustomerProfile({ name: "محمد أحمد علي", phone: "777123456" });
 
-  assert.deepEqual(getCustomerProfile(), { name: "محمد أحمد علي" });
+  assert.deepEqual(getCustomerProfile(), { name: "محمد أحمد علي", phone: "777123456" });
 });

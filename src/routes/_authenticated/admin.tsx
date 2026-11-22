@@ -11,7 +11,7 @@ import { AddonsManager } from "@/features/admin/AddonsManager";
 import { OrdersManager } from "@/features/admin/OrdersManager";
 import { DeliverySettingsManager } from "@/features/admin/DeliverySettingsManager";
 import { StatisticsManager } from "@/features/admin/StatisticsManager";
-import { StoreInfoManager } from "@/components/admin/StoreInfoManager";
+import { StoreInfoManager } from "@/features/admin/StoreInfoManager";
 
 
 
@@ -23,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "لوحة التحكم — مِيم | MEEM" },
       { property: "og:description", content: "إدارة الأقسام والمنتجات والإضافات والطلبات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AdminPage,

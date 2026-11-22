@@ -42,9 +42,6 @@ import {
   useProducts,
   type Product,
   type ProductBadge,
-  useProducts,
-  type Product,
-  type ProductBadge,
   useStoreInformation,
 } from "@/data/store-data";
 

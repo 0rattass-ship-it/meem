@@ -64,7 +64,7 @@ export function StatisticsManager() {
   const stats = useQuery({
     queryKey: ["admin-statistics"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_admin_statistics", {});
+      const { data, error } = await supabase.rpc("get_admin_statistics", { p_request: "summary" });
 
       if (error) throw error;
 

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerLoginDialog } from "@/features/customer/CustomerLoginDialog";
+import { canSubmitPayment, receiptFileError, RECEIPT_BUCKET } from "@/lib/payment-receipt";
 import { formatPrice, itemUnitTotal, useCart } from "@/features/store/cart";
 import {
   commonBookingDays,
@@ -43,9 +44,8 @@ export const Route = createFileRoute("/checkout")({
       { name: "description", content: "أكمل بيانات طلبك من مِيم | MEEM وأرسله مباشرة." },
       { property: "og:title", content: "إتمام الطلب — مِيم | MEEM" },
       { property: "og:description", content: "أكمل بيانات طلبك وأرسله مباشرة." },
-      { property: "og:image", content: "/og-image.png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CheckoutPage,
@@ -80,6 +80,9 @@ function CheckoutPage() {
   const [locationId, setLocationId] = useState("");
   const [sending, setSending] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "pay_at_store">("bank_transfer");
+  const [receiptPath, setReceiptPath] = useState<string | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
   const [done, setDone] = useState<{ orderNumber: number; total: number; trackingToken: string; paymentMethod: string } | null>(null);
   const [tracking, setTracking] = useState<{ loading: boolean; data: TrackedOrder | null; error: boolean }>({ loading: false, data: null, error: false });
 
@@ -176,7 +179,44 @@ function CheckoutPage() {
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
+  async function uploadReceipt(file: File | undefined) {
+    setReceiptPath(null);
+    setReceiptError(null);
+    if (!file) return;
+    const validationError = receiptFileError(file);
+    if (validationError) {
+      setReceiptError(validationError);
+      return;
+    }
+    setReceiptUploading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) {
+        setLoginOpen(true);
+        setReceiptError("سجّل الدخول أولًا لرفع الإيصال");
+        return;
+      }
+      const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+      const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+      const { data, error } = await supabase.storage.from(RECEIPT_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
+      if (error || !data) {
+        setReceiptError("تعذّر رفع الإيصال، اختر الصورة مجددًا وحاول مرة أخرى");
+        return;
+      }
+      setReceiptPath(data.path);
+    } catch {
+      setReceiptError("تعذّر رفع الإيصال، تحقق من اتصال الإنترنت وحاول مجددًا");
+    } finally {
+      setReceiptUploading(false);
+    }
+  }
+
   async function submit() {
+    if (!canSubmitPayment(paymentMethod, receiptPath, receiptUploading)) {
+      toast.error("ارفع صورة إيصال التحويل بنجاح أولًا");
+      return;
+    }
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session?.user) {
       setLoginOpen(true);
@@ -217,7 +257,7 @@ function CheckoutPage() {
     const trackingToken = createTrackingToken();
     setSending(true);
     try {
-      const { data, error } = await supabase.rpc("place_order_with_payment", {
+      const { data, error } = await supabase.rpc("place_order_with_receipt", {
         _customer_name: parsed.data.customer_name,
         _address: parsed.data.address ?? "",
         _notes: parsed.data.notes ?? "",
@@ -226,6 +266,7 @@ function CheckoutPage() {
         ...(deliveryTimeId ? { _delivery_time_id: deliveryTimeId } : {}),
         ...(locationId ? { _delivery_location_id: locationId } : {}),
         ...(autoDay === null ? {} : { _booking_day: autoDay }),
+        ...(paymentMethod === "bank_transfer" && receiptPath ? { _receipt_path: receiptPath } : {}),
         _items: cart.items.map((item) => ({
           product_id: item.productId,
           quantity: item.quantity,
@@ -236,6 +277,10 @@ function CheckoutPage() {
       if (error) {
         console.error("Order submission failed:", error);
         const knownErrors: Record<string, string> = {
+          receipt_required: "ارفع صورة إيصال التحويل أولًا",
+          invalid_receipt: "صورة الإيصال غير صالحة، ارفعها مجددًا",
+          receipt_not_uploaded: "لم يكتمل رفع الإيصال، ارفع الصورة مجددًا",
+          receipt_already_used: "هذا الإيصال مرتبط بطلب سابق، اختر إيصال هذا الطلب",
           invalid_name: "الاسم غير صالح، تحقق من الاسم وحاول مجددًا",
           invalid_items: "السلة غير صالحة أو فارغة، حدّث الصفحة وحاول مجددًا",
           invalid_product: "أحد المنتجات لم يعد متاحًا، حدّث السلة وحاول مجددًا",
@@ -255,25 +300,6 @@ function CheckoutPage() {
         toast.error("لم يصل تأكيد الطلب من الخادم، تحقق من طلباتك قبل إعادة الإرسال");
         return;
       }
-
-    if (error || !data || typeof data !== "object" || !("order_number" in data)) {
-      console.error("place_order failed", error);
-      const msg = error?.message ?? "";
-      const reasons: Record<string, string> = {
-        invalid_product: "أحد المنتجات في السلة لم يعد متوفرًا، احذفه من السلة وأعد المحاولة",
-        invalid_addon: "إحدى الإضافات لم تعد متاحة، احذف المنتج وأضفه من جديد",
-        addon_required: "يجب اختيار إضافة واحدة على الأقل لبعض المنتجات",
-        product_day_unavailable: "أحد المنتجات غير متاح في يوم التسليم المحدد",
-        product_time_unavailable: "وقت التسليم المختار غير متاح لأحد المنتجات",
-        invalid_delivery_time: "وقت التسليم لم يعد متاحًا، اختر وقتًا آخر",
-        invalid_delivery_location: "مكان التسليم لم يعد متاحًا، اختر مكانًا آخر",
-        payment_window_not_configured: "لم يتم تحديد وقت الدفع في المشرب بعد",
-        invalid_name: "الاسم غير صحيح",
-      };
-      const key = Object.keys(reasons).find((k) => msg.includes(k));
-      toast.error(key ? reasons[key] : "تعذّر إرسال الطلب، تحقق من الاتصال وحاول مرة أخرى");
-      return;
-    }
 
     const result = data as { order_number: number; total: number; payment_method: string };
     setCustomerProfile({ name: parsed.data.customer_name, email: customerProfile?.email ?? "" });
@@ -312,7 +338,7 @@ function CheckoutPage() {
                   <p className="mb-4 text-sm font-bold text-primary">حالة الطلب</p>
                   <div className="space-y-3">
                     {ORDER_STATUS_STEPS.map((step, index) => {
-                      const current = normalizedOrderStatus(tracking.data!.status);
+                      const current = normalizedOrderStatus(tracking.data?.status ?? "");
                       const currentIndex = ORDER_STATUS_STEPS.findIndex((item) => item.value === current);
                       const active = index <= currentIndex;
                       const isCurrent = step.value === current;
@@ -527,7 +553,7 @@ function CheckoutPage() {
 
         <section className="card-soft space-y-4 p-4">
           <h2 className="font-bold text-foreground">طريقة الدفع</h2>
-          <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "bank_transfer" | "pay_at_store")}>
+          <Select disabled={sending} value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "bank_transfer" | "pay_at_store")}>
             <SelectTrigger>
               <SelectValue placeholder="اختر طريقة الدفع" />
             </SelectTrigger>
@@ -551,6 +577,13 @@ function CheckoutPage() {
                   <p className="mt-2 font-bold text-primary">المبلغ المطلوب تحويله: {formatPrice(cart.total)}</p>
                 </>
               )}
+              <div className="mt-3 space-y-2">
+                <Label htmlFor="payment-receipt">صورة إيصال التحويل (إلزامي)</Label>
+                <Input id="payment-receipt" type="file" accept="image/jpeg,image/png,image/webp" required disabled={sending || receiptUploading} onChange={(event) => void uploadReceipt(event.target.files?.[0])} />
+                <p aria-live="polite" className={receiptError ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
+                  {receiptError ?? (receiptUploading ? "جاري رفع الإيصال…" : receiptPath ? "تم رفع الإيصال بنجاح" : "JPG، PNG أو WEBP — حتى 10 ميجابايت")}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="rounded-2xl bg-surface p-4 text-sm">
@@ -641,7 +674,7 @@ function CheckoutPage() {
           <Button
             size="lg"
             className="w-full rounded-full"
-            disabled={sending || cart.items.length === 0 || conflict}
+            disabled={sending || cart.items.length === 0 || conflict || !canSubmitPayment(paymentMethod, receiptPath, receiptUploading)}
             onClick={submit}
           >
             {sending ? "جاري الإرسال…" : "إرسال الطلب"}

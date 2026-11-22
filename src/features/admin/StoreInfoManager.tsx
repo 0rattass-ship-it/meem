@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { useStoreInformation } from "@/lib/store-data";
+import { useStoreInformation } from "@/data/store-data";
 
 export function StoreInfoManager() {
   const info = useStoreInformation();
